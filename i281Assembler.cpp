@@ -93,7 +93,8 @@ void  parseINPUTC(std::string  codeLine){
 
 
 int main(){
-    asmCode = parseCode("TestProgram.txt");
+    std::string rawCode = readFromFile("TestProgram.txt");
+    asmCode = parseCode(rawCode);
     parseNOPE();
     std::cout <<  machineCode;
 

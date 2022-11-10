@@ -209,15 +209,15 @@ std::string moveJumpAds(std::string asmCode){
 }
 
 /**
- * @brief Parses the code from a provided file. Returns the data and code sections in a struct with the comments and white removed and the jump addresses moved to the end.
+ * @brief Parses the code from a provided string. Returns the data and code sections in a struct with the comments and white removed and the jump addresses moved to the end.
  * 
- * @param fileLoc The location of the file to read the code from.
+ * @param asmCode A string containing the code to parse
  * @return A struct containing the parsed code 
  */
-partedCode parseCode(std::string fileLoc){
-    std::string code = readFromFile(fileLoc);
-    code =  removeWhiteSpaceAndComments(code);
-    partedCode codeInParts = seperateCodeAndData(code);
+partedCode parseCode(std::string asmCode){
+    //std::string code = readFromFile(asmCode);
+    asmCode =  removeWhiteSpaceAndComments(asmCode);
+    partedCode codeInParts = seperateCodeAndData(asmCode);
     codeInParts.codeSec = moveJumpAds(codeInParts.codeSec);
 
     return codeInParts;
