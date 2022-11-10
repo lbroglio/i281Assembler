@@ -5,6 +5,12 @@
 #include "i281AssemblyParser_H.h"
 
 
+struct usrVar{
+    std::string name;
+    int val;
+};
+
+
 //Global Variables
 
 //Maps Ope Codes to there 4 bit machine code identifier. 
@@ -45,8 +51,10 @@ partedCode asmCode;
 int currLineNum;
 //Stores the generated machine code as a string
 std::string machineCode = "";
+//Stores the locations of the user provided variables in memory 
+std::unordered_map<usrVar,int> usrVarMap;
 
-//Added to test
+
 /**
  * @brief Finds the line number for the jump addreses in the code and associates it with the address in the jumpAddressesMap
  * 
@@ -74,8 +82,13 @@ void setJumpAddreses(){
 
 void parseNOPE(){
     std::string generatedMachineCodeLine = opeCodeMap.at("NOOP");
-    generatedMachineCodeLine += "00000000\n";
+    generatedMachineCodeLine += "00_00_00000000\n";
     machineCode += generatedMachineCodeLine;
+}
+
+void  parseINPUTC(std::string  codeLine){
+    std::string generatedMachineCodeLine =  opeCodeMap.at("INPUTC");
+    generatedMachineCodeLine += "00_00_";
 }
 
 
