@@ -46,7 +46,7 @@ int currLineNum;
 //Stores the generated machine code as a string
 std::string machineCode = "";
 
-
+//Added to test
 /**
  * @brief Finds the line number for the jump addreses in the code and associates it with the address in the jumpAddressesMap
  * 
