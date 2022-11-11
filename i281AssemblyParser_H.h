@@ -4,14 +4,24 @@
 #include <fstream>
 
 
+/**
+ * @brief Stores the line numbers of the .code and .data declarators together
+ * 
+ */
+struct sectionLocs {
+    int dataLineNum;
+    int codeLineNum;
+};
 
 /**
- * @brief Stores the two parts of the code together but as seperate strings
+ * @brief Stores the two parts of the code together but as seperate strings along with the line number they are each at within the program as a sectionLoc struct.
  * 
  */
 struct partedCode{
     std::string dataSec;
     std::string codeSec;
+    sectionLocs lineNums;
+    
 };
 
 /**
@@ -68,6 +78,30 @@ std::string readLine(std::string readFrom, int* cursorLoc){
 
     return line;
 
+}
+
+/**
+ * @brief Reads the next word from the provided string. Starts at the value of provided pointer and ends at a space, new line character, or the end of the provided string. 
+ * Increments the value at the provided cursor to the index after the end of the word
+ * 
+ * @param readFrom The string to read a word fro,
+ * @param currLoc The location within that string to start reading at
+ * @return The word read  from the string
+ */
+std::string readWord(std::string readFrom,int* currLoc){
+    std::string removeBegining = readFrom.substr(*currLoc);
+    int spaceLoc = removeBegining.find(' ');
+
+    std::string foundWord = "";
+    char currChar = readFrom[*currLoc];
+
+    while(currChar != ' ' && currChar != '\n' && *currLoc < readFrom.length()){
+        foundWord += currChar;
+        *currLoc++;
+        currChar =  readFrom[*currLoc];
+    }
+
+    return foundWord;
 }
 
 /**
@@ -176,12 +210,8 @@ partedCode seperateCodeAndData(std::string readFrom){
     
 
    //Gets the postion where the code section begins
-   while(currLine != ".code\n" && *cursorLoc < readFrom.length()){
+   while(currLine != ".code\n"){
     currLine = readLine(readFrom, cursorLoc);
-   }
-
-   if(*cursorLoc >= readFrom.length()){
-    codeNotFoundError();
    }
 
    //Calculates the number of characters in the data section
@@ -225,6 +255,47 @@ std::string moveJumpAds(std::string asmCode){
    return movedString;
 }
 
+
+/**
+ * @brief Finds the line numbers of the .data and .code declarators returns them in a sectionLocs struct
+ * 
+ * @param asmCode The code to find the declarators within
+ * @return The line numbers stored together in a struct 
+ */
+sectionLocs findCodeDataLoc(std::string asmCode){
+    bool codeFound =  false;
+    int dataLoc = -1;
+    int codeLoc;
+    int currLineNum = 1;
+
+    int* cursor = (int*) malloc(sizeof  cursor);
+    *cursor =0; 
+
+
+    std::string currLine = readLine(asmCode,cursor,1);
+    while(codeFound == false && *cursor < asmCode.length()){
+        if(currLine == ".data"){
+            dataLoc == currLineNum;
+        }
+        else if(currLine == ".code"){
+            codeLoc == currLineNum;
+            codeFound = true;
+        }
+         currLine = readLine(asmCode,cursor,1);
+         currLineNum++;
+    }
+    if(*cursor >= asmCode.length()){
+        codeNotFoundError();
+    }
+
+    sectionLocs toReturn;
+    toReturn.codeLineNum = codeLoc;
+    toReturn.dataLineNum = dataLoc;
+
+    free(cursor);
+    return toReturn;
+}
+
 /**
  * @brief Parses the code from a provided string. Returns the data and code sections in a struct with the comments and white removed and the jump addresses moved to the end.
  * 
@@ -233,9 +304,11 @@ std::string moveJumpAds(std::string asmCode){
  */
 partedCode parseCode(std::string asmCode){
     //std::string code = readFromFile(asmCode);
+    sectionLocs decLocs = findCodeDataLoc(asmCode);
     asmCode =  removeWhiteSpaceAndComments(asmCode);
     partedCode codeInParts = seperateCodeAndData(asmCode);
     codeInParts.codeSec = moveJumpAds(codeInParts.codeSec);
+    codeInParts.lineNums = decLocs;
 
     return codeInParts;
 }
@@ -250,4 +323,3 @@ std::string getOpeCode(std::string getFrom){
     int endLoc = getFrom.find(' ');
     return getFrom.substr(0,endLoc);
 }
-

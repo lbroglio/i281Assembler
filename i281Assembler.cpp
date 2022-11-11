@@ -60,6 +60,34 @@ std::string machineCodeUnformmated = "";
 //Stores the value of a user provided vairable and its location in memory associated with its name
 std::unordered_map<std::string,usrVar> usrVarMap;
 
+/**
+ * @brief Prints to the console that a variable was declared with a data type other than BYTE
+ * 
+ * @param lineNum The line number that error happened at
+ * @param givenDataType 
+ */
+void unknownDataTypeError(int lineNum, std::string  givenDataType){
+    std::cout << "ERROR on line " << lineNum << ": A variable was declared with the data type " << givenDataType << " expected BYTE";
+    exit(1);
+}
+
+
+void parseVarDec(std::string lineToParse, int varCounter){
+    int* cursor = (int*) malloc(sizeof cursor);
+
+    std::string varName = readWord(lineToParse,cursor);
+    *cursor += 1;
+
+    std::string dataType = readWord(lineToParse,cursor);
+
+    if(dataType != "BYTE"){
+        int lineNum = asmCode.lineNums.dataLineNum + varCounter;
+        unknownDataTypeError(lineNum, dataType);
+    }
+
+
+
+}
 
 void readDataSec(){
     int* cursor = (int*) malloc(sizeof cursor);
@@ -69,19 +97,6 @@ void readDataSec(){
          std::string currLine = readLine(asmCode.dataSec,cursor,1);
     }
    
-
-
-
-}
-
-void parseVarDec(std::string lineToParse){
-    std::string varName = "";
-    char currChar = 'x';
-
-    while(currChar != ' '){
-
-    }
-
 }
 
 /**
@@ -123,7 +138,7 @@ void  parseINPUTC(std::string  codeLine){
     std::string generatedMachineCodeLineRaw = opeCodeMap.at("INPUTC");
     generatedMachineCodeLine += "_00_00_";
     generatedMachineCodeLineRaw += "0000";
-    
+
 }
 
 
