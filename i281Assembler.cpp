@@ -5,9 +5,35 @@
 #include "i281AssemblyParser_H.h"
 
 
-struct usrVar{
-    std::string name;
-    int val;
+/**
+ * @brief The class for a UsrVar variable. Stores the assigned value of a variable provided by the user 
+ * 
+ */
+class UsrVar{
+    public:
+        //The name of  the variable as given by the user
+        std::string name;
+        //The value assigned to the vairable by the user (zero if none provided) 
+        int val;
+        /**
+         * @brief Constructs a new UsrVar obj assigning the instance variables as provided by the user
+         * 
+         * @param varName Name given by the user
+         * @param varVal Value given by the user (zero if none)
+         */
+        UsrVar(std::string varName,  int varVal){
+            name = varName;
+            val = varVal;
+        }
+    /**
+     * @brief Compares the given string with the name instance variable of this object
+     * 
+     * @param comTo The string to compare name against
+     * @return true if the string is equal to name false others
+     */
+    bool operator == (std::string comTo){
+        return name == comTo;
+    }
 };
 
 
@@ -52,7 +78,7 @@ int currLineNum;
 //Stores the generated machine code as a string
 std::string machineCode = "";
 //Stores the locations of the user provided variables in memory 
-std::unordered_map<usrVar,int> usrVarMap;
+std::unordered_map<UsrVar,int> usrVarMap;
 
 
 /**
