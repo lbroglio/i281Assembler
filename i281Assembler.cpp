@@ -6,34 +6,12 @@
 
 
 /**
- * @brief The class for a UsrVar variable. Stores the assigned value of a variable provided by the user 
+ * @brief Stores information about a user provided variable. Stores the location memory and user provided value together.
  * 
  */
-class UsrVar{
-    public:
-        //The name of  the variable as given by the user
-        std::string name;
-        //The value assigned to the vairable by the user (zero if none provided) 
-        int val;
-        /**
-         * @brief Constructs a new UsrVar obj assigning the instance variables as provided by the user
-         * 
-         * @param varName Name given by the user
-         * @param varVal Value given by the user (zero if none)
-         */
-        UsrVar(std::string varName,  int varVal){
-            name = varName;
-            val = varVal;
-        }
-    /**
-     * @brief Compares the given string with the name instance variable of this object
-     * 
-     * @param comTo The string to compare name against
-     * @return true if the string is equal to name false others
-     */
-    bool operator == (std::string comTo){
-        return name == comTo;
-    }
+struct usrVar{
+    int memoryLoc;
+    int val;
 };
 
 
@@ -77,8 +55,8 @@ partedCode asmCode;
 int currLineNum;
 //Stores the generated machine code as a string
 std::string machineCode = "";
-//Stores the locations of the user provided variables in memory 
-std::unordered_map<UsrVar,int> usrVarMap;
+//Stores the value of a user provided vairable and its location in memory associated with its name
+std::unordered_map<std::string,usrVar> usrVarMap;
 
 
 /**
