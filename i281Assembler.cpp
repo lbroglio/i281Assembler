@@ -20,32 +20,32 @@ struct usrVar{
 //Maps Ope Codes to there 4 bit machine code identifier. 
 const std::unordered_map<std::string,std::string> opeCodeMap = 
 {
-    {"NOOP","0000_"},
-    {"INPUTC","0001_"},
-    {"INPUTCF","001_"},
-    {"INPUTD","0001_"},
-    {"INPUTDF","0001_"},
-    {"MOVE","0010_"},
-    {"LOADI","0011_"},
-    {"LOADP","0011_"},
-    {"ADD","0100_"},
-    {"ADDI","0101_"},
-    {"SUB","0110_"},
-    {"SUBI","0111_"},
-    {"LOAD","1000_"},
-    {"LOADF","1001_"},
-    {"STORE","1010_"},
-    {"STOREF","1011_"},
-    {"SHIFTL","1100_"},
-    {"SHIFTR","1100_"},
-    {"CMP","1101_"},
-    {"JUMP","1110_"},
-    {"BRE","1111_"},
-    {"BRZ","1111_"},
-    {"BRNE","1111_"},
-    {"BRNZ","1111_"},
-    {"BRG","1111_"},
-    {"BRGE","1111_"},
+    {"NOOP","0000"},
+    {"INPUTC","0001"},
+    {"INPUTCF","001"},
+    {"INPUTD","0001"},
+    {"INPUTDF","0001"},
+    {"MOVE","0010"},
+    {"LOADI","0011"},
+    {"LOADP","0011"},
+    {"ADD","0100"},
+    {"ADDI","0101"},
+    {"SUB","0110"},
+    {"SUBI","0111"},
+    {"LOAD","1000"},
+    {"LOADF","1001"},
+    {"STORE","1010"},
+    {"STOREF","1011"},
+    {"SHIFTL","1100"},
+    {"SHIFTR","1100"},
+    {"CMP","1101"},
+    {"JUMP","1110"},
+    {"BRE","1111"},
+    {"BRZ","1111"},
+    {"BRNE","1111"},
+    {"BRNZ","1111"},
+    {"BRG","1111"},
+    {"BRGE","1111"},
 };
 //Stores the addresses(Line number) of points the program can jump to 
 std::unordered_map<std::string,int> jumpAddressesMap;
@@ -55,9 +55,34 @@ partedCode asmCode;
 int currLineNum;
 //Stores the generated machine code as a string
 std::string machineCode = "";
+//Stores the generated machine code as a string as only the binary bits with no additonal formating
+std::string machineCodeUnformmated = "";
 //Stores the value of a user provided vairable and its location in memory associated with its name
 std::unordered_map<std::string,usrVar> usrVarMap;
 
+
+void readDataSec(){
+    int* cursor = (int*) malloc(sizeof cursor);
+    *cursor = 0;
+
+    while(*cursor < asmCode.dataSec.length()){
+         std::string currLine = readLine(asmCode.dataSec,cursor,1);
+    }
+   
+
+
+
+}
+
+void parseVarDec(std::string lineToParse){
+    std::string varName = "";
+    char currChar = 'x';
+
+    while(currChar != ' '){
+
+    }
+
+}
 
 /**
  * @brief Finds the line number for the jump addreses in the code and associates it with the address in the jumpAddressesMap
@@ -86,13 +111,19 @@ void setJumpAddreses(){
 
 void parseNOPE(){
     std::string generatedMachineCodeLine = opeCodeMap.at("NOOP");
-    generatedMachineCodeLine += "00_00_00000000\n";
+    std::string generatedMachineCodeLineRaw = opeCodeMap.at("NOOP");
+    generatedMachineCodeLine += "_00_00_00000000\n";
+    generatedMachineCodeLineRaw += "000000000000\n";
     machineCode += generatedMachineCodeLine;
+    machineCodeUnformmated += generatedMachineCodeLineRaw;
 }
 
 void  parseINPUTC(std::string  codeLine){
-    std::string generatedMachineCodeLine =  opeCodeMap.at("INPUTC");
-    generatedMachineCodeLine += "00_00_";
+    std::string generatedMachineCodeLine = opeCodeMap.at("INPUTC");
+    std::string generatedMachineCodeLineRaw = opeCodeMap.at("INPUTC");
+    generatedMachineCodeLine += "_00_00_";
+    generatedMachineCodeLineRaw += "0000";
+    
 }
 
 

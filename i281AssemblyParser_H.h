@@ -15,6 +15,15 @@ struct partedCode{
 };
 
 /**
+ * @brief Prints to the console that the program could not find the code section and ends the program.
+ * 
+ */
+void codeNotFoundError(){
+    std::cout << "ERROR: Program could not be found. Include .code to denote this";
+    exit(1);
+}
+
+/**
  * @brief Reads through the contents of a file at the provided path and returns a string containing the contents of the file.
  * 
  * @param fileLoc A string containing the path to the file  to read from.
@@ -125,6 +134,10 @@ std::string removeWhiteSpaceAndComments(std::string asmCode){
             if(curChar == ';'){
                 i += asmCode.length();
             }
+            else if (curChar == ','){
+               betweenChars = false;
+               withoutComments+=curChar;
+            }
             else if(curChar != ' ' ){
                 betweenChars = true;
                 withoutComments+=curChar;
@@ -163,8 +176,12 @@ partedCode seperateCodeAndData(std::string readFrom){
     
 
    //Gets the postion where the code section begins
-   while(currLine != ".code\n"){
+   while(currLine != ".code\n" && *cursorLoc < readFrom.length()){
     currLine = readLine(readFrom, cursorLoc);
+   }
+
+   if(*cursorLoc >= readFrom.length()){
+    codeNotFoundError();
    }
 
    //Calculates the number of characters in the data section
@@ -205,12 +222,11 @@ std::string moveJumpAds(std::string asmCode){
         
     }
    }
-   free(cursorLoc);
    return movedString;
 }
 
 /**
- * @brief Parses the code from a provided file. Returns the data and code sections in a struct with the comments and white removed and the jump addresses moved to the end.
+ * @brief Parses the code from a provided string. Returns the data and code sections in a struct with the comments and white removed and the jump addresses moved to the end.
  * 
  * @param asmCode A string containing the code to parse
  * @return A struct containing the parsed code 

@@ -15,6 +15,15 @@ struct partedCode{
 };
 
 /**
+ * @brief Prints to the console that the program could not find the code section and ends the program.
+ * 
+ */
+void codeNotFoundError(){
+    std::cout << "ERROR: Program could not be found. Include .code to denote this";
+    exit(1);
+}
+
+/**
  * @brief Reads through the contents of a file at the provided path and returns a string containing the contents of the file.
  * 
  * @param fileLoc A string containing the path to the file  to read from.
@@ -125,6 +134,10 @@ std::string removeWhiteSpaceAndComments(std::string asmCode){
             if(curChar == ';'){
                 i += asmCode.length();
             }
+            else if (curChar == ','){
+               betweenChars = false;
+               withoutComments+=curChar;
+            }
             else if(curChar != ' ' ){
                 betweenChars = true;
                 withoutComments+=curChar;
@@ -163,8 +176,12 @@ partedCode seperateCodeAndData(std::string readFrom){
     
 
    //Gets the postion where the code section begins
-   while(currLine != ".code\n"){
+   while(currLine != ".code\n" && *cursorLoc < readFrom.length()){
     currLine = readLine(readFrom, cursorLoc);
+   }
+
+   if(*cursorLoc >= readFrom.length()){
+    codeNotFoundError();
    }
 
    //Calculates the number of characters in the data section
@@ -235,7 +252,11 @@ std::string getOpeCode(std::string getFrom){
 }
 
 
+
 int main(){
-    partedCode test = parseCode("C:\\CoursesCode\\Cpre281\\i281_CPU_Software\\Sorting_Algorithms\\Bubble_Sort\\BubbleSort.asm");
-    std::cout << test.codeSec;
+    std::string code = readFromFile("C:\\CoursesCode\\Cpre281\\i281_CPU_Software\\Sorting_Algorithms\\Bubble_Sort\\BubbleSort.asm");
+
+    partedCode test = parseCode(code);
+
+    std::cout << test.dataSec << "\n\n" << test.codeSec;
 }
