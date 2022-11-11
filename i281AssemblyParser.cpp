@@ -308,7 +308,8 @@ partedCode parseCode(std::string asmCode){
     asmCode =  removeWhiteSpaceAndComments(asmCode);
     partedCode codeInParts = seperateCodeAndData(asmCode);
     codeInParts.codeSec = moveJumpAds(codeInParts.codeSec);
-    codeInParts.lineNums = decLocs;
+    codeInParts.lineNums.dataLineNum = decLocs.dataLineNum;
+    codeInParts.lineNums.codeLineNum = decLocs.codeLineNum;
 
     return codeInParts;
 }
@@ -326,9 +327,9 @@ std::string getOpeCode(std::string getFrom){
 
 
 int main(){
-    std::string code = readFromFile("C:\\CoursesCode\\Cpre281\\i281_CPU_Software\\Sorting_Algorithms\\Bubble_Sort\\BubbleSort.asm");
+    std::string code = readFromFile("TestProgram.txt");
 
     partedCode test = parseCode(code);
 
-    std::cout << test.lineNums.codeLineNum;;
+    std::cout << test.lineNums.dataLineNum;;
 }

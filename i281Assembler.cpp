@@ -72,31 +72,85 @@ void unknownDataTypeError(int lineNum, std::string  givenDataType){
 }
 
 
-void parseVarDec(std::string lineToParse, int varCounter){
-    int* cursor = (int*) malloc(sizeof cursor);
 
+/**
+ * @brief Parses a users variable declaration. Associates its value and location and memory with its name in the usrVar map. 
+ * Prints an error if a data type other than BYTE is used
+ * 
+ * @param lineToParse The line of code to parse the declaration from
+ * @param varCounter A running count of the number of variables the user has declared
+ */
+void parseVarDec(std::string lineToParse, int* varCounter){
+    //Initalizes needed variables
+
+    int arrCounter =0;
+    std::string counterStr = "";
+    int* cursor = (int*) malloc(sizeof cursor);
+    *cursor =0;
+
+    //Reads the first word in the declaration and sets the variables name to it
     std::string varName = readWord(lineToParse,cursor);
     *cursor += 1;
 
+    //Reads the second word in the declaration saves it as dataType.
     std::string dataType = readWord(lineToParse,cursor);
 
+    //Ends the program and prints to the console if the data type is anything  besides BYTE
     if(dataType != "BYTE"){
-        int lineNum = asmCode.lineNums.dataLineNum + varCounter;
+        int lineNum = asmCode.lineNums.dataLineNum + *varCounter;
         unknownDataTypeError(lineNum, dataType);
     }
+    *cursor +=1;
 
+    //Loops through the rest of the line until it runs out of variable values - needed in case the user declares an array
+    while(* cursor < lineToParse.length()){
+        char varVal = lineToParse[*cursor];
+        usrVar temp;
 
+        //Checks if the user has declared a number value at this char
+        if(varVal != ',' && varVal != '?'){
+            temp.val = varVal - '0';
+        }
+        //Sets the value to zero if a ? is given
+        else{
+            varVal = 0;
+        }
 
+        //If a variable is being declared stores it in the variable map
+        if(varVal != ','){
+            temp.memoryLoc = *varCounter  -1;
+            //If this variable is the second element in an array adds a number to the end of it to differentiate it
+            std::string insertName =  varName + counterStr;
+
+            usrVarMap.insert({insertName,temp});
+
+            (*varCounter)++;
+            arrCounter++;
+            counterStr = (char) ('0' + arrCounter);
+        }
+        *cursor += 1;
+        
+    }
+    free(cursor);
 }
 
+/**
+ * @brief Reads through the programs data section and handles all the variable declarations
+ * 
+ */
 void readDataSec(){
     int* cursor = (int*) malloc(sizeof cursor);
     *cursor = 0;
+    int* varCounter = (int*) malloc(sizeof varCounter);
+    *varCounter = 1;
 
     while(*cursor < asmCode.dataSec.length()){
          std::string currLine = readLine(asmCode.dataSec,cursor,1);
+         parseVarDec(currLine,varCounter);
     }
    
+   free(cursor);
+   free(varCounter);
 }
 
 /**
@@ -144,9 +198,12 @@ void  parseINPUTC(std::string  codeLine){
 
 int main(){
     std::string rawCode = readFromFile("TestProgram.txt");
+
     asmCode = parseCode(rawCode);
-    parseNOPE();
-    std::cout <<  machineCode;
+    readDataSec();
+
+    std::cout << usrVarMap.at("last").val;
+
 
 
 }

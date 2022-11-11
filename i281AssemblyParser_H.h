@@ -97,7 +97,7 @@ std::string readWord(std::string readFrom,int* currLoc){
 
     while(currChar != ' ' && currChar != '\n' && *currLoc < readFrom.length()){
         foundWord += currChar;
-        *currLoc++;
+        (*currLoc)++;
         currChar =  readFrom[*currLoc];
     }
 
@@ -275,10 +275,10 @@ sectionLocs findCodeDataLoc(std::string asmCode){
     std::string currLine = readLine(asmCode,cursor,1);
     while(codeFound == false && *cursor < asmCode.length()){
         if(currLine == ".data"){
-            dataLoc == currLineNum;
+            dataLoc = currLineNum;
         }
         else if(currLine == ".code"){
-            codeLoc == currLineNum;
+            codeLoc = currLineNum;
             codeFound = true;
         }
          currLine = readLine(asmCode,cursor,1);
@@ -308,7 +308,8 @@ partedCode parseCode(std::string asmCode){
     asmCode =  removeWhiteSpaceAndComments(asmCode);
     partedCode codeInParts = seperateCodeAndData(asmCode);
     codeInParts.codeSec = moveJumpAds(codeInParts.codeSec);
-    codeInParts.lineNums = decLocs;
+    codeInParts.lineNums.dataLineNum = decLocs.dataLineNum;
+    codeInParts.lineNums.codeLineNum = decLocs.codeLineNum;
 
     return codeInParts;
 }
