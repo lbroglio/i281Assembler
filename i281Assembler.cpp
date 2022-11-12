@@ -202,7 +202,7 @@ int main(){
     asmCode = parseCode(rawCode);
     readDataSec();
 
-    std::cout << usrVarMap.at("last").val;
+    std::cout <<asmCode.codeSec;
 
 
 

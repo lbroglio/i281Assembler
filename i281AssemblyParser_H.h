@@ -324,3 +324,41 @@ std::string getOpeCode(std::string getFrom){
     int endLoc = getFrom.find(' ');
     return getFrom.substr(0,endLoc);
 }
+
+
+/**
+ * @brief Reads the first set of brackets after the given index startLoc. Returns everything between the two brackets.
+ * If the brackets are not closed returns BRACKET_WAS_NOT_CLOSED
+ * 
+ * @param readFrom The string to read the bracket statement from
+ * @param startLoc The index to start looking for brackets at
+ * @return Everything within the set of brackets or BRACKET_WAS_NOT_CLOSED if they aren't closed 
+ */
+std::string parseBrackets(std::string readFrom, int startLoc){
+    int curLoc = startLoc;
+    char curChar =  readFrom[curLoc];
+    std::string bracketContents = "";
+
+
+    while(curChar != '['){
+        curLoc++;
+        curChar= readFrom[curLoc];
+    }
+    curLoc ++;
+    curChar =  readFrom[curLoc];
+
+    while(curChar != ']' && curLoc < readFrom.length()){
+        bracketContents += curChar;
+        curLoc++;
+        curChar =  readFrom[curLoc];
+        
+    }
+
+    if(curLoc == readFrom.length() && curChar != ']'){
+        return "BRACKET_WAS_NOT_CLOSED";
+    }
+    else{
+        return bracketContents;
+    }
+
+}
