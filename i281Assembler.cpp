@@ -187,11 +187,33 @@ void parseNOPE(){
     machineCodeUnformmated += generatedMachineCodeLineRaw;
 }
 
-void  parseINPUTC(std::string  codeLine){
+void  parseINPUTC(std::string  codeLine,int lineNuNum){
     std::string generatedMachineCodeLine = opeCodeMap.at("INPUTC");
     std::string generatedMachineCodeLineRaw = opeCodeMap.at("INPUTC");
     generatedMachineCodeLine += "_00_00_";
     generatedMachineCodeLineRaw += "0000";
+    
+    int* cursor =  (int*) malloc(sizeof cursor);
+    *cursor = 0;
+    readWord(codeLine,cursor);
+    *cursor+=1;
+
+    std::string bracketContents = parseBrackets(codeLine,*cursor);
+
+    int* bracketCursor =  (int*) malloc(sizeof bracketCursor);
+    *bracketCursor = 0;
+
+    std::string varName = readWord(bracketContents,bracketCursor);
+    
+    try{
+        usrVar referencedVar = usrVarMap.at(varName);
+    }
+    catch(std::out_of_range){
+        undefinedVariableError();
+    }
+    
+
+
 
 }
 
@@ -201,6 +223,7 @@ int main(){
 
     asmCode = parseCode(rawCode);
     readDataSec();
+
 
     std::cout <<asmCode.codeSec;
 

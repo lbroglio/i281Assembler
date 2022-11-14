@@ -80,12 +80,14 @@ std::string readLine(std::string readFrom, int* cursorLoc){
 
 }
 
+
+
 /**
  * @brief Reads the next word from the provided string. Starts at the value of provided pointer and ends at a space, new line character, or the end of the provided string. 
  * Increments the value at the provided cursor to the index after the end of the word
  * 
  * @param readFrom The string to read a word fro,
- * @param currLoc The location within that string to start reading at
+ * @param currLoc A pointer to the location to start reading the word from. The pointer will be icremented to after the end of the word
  * @return The word read  from the string
  */
 std::string readWord(std::string readFrom,int* currLoc){
@@ -95,13 +97,30 @@ std::string readWord(std::string readFrom,int* currLoc){
     std::string foundWord = "";
     char currChar = readFrom[*currLoc];
 
-    while(currChar != ' ' && currChar != '\n' && *currLoc < readFrom.length()){
+    while(currChar != ' ' && currChar != ',' && currChar != '\n' && *currLoc < readFrom.length()){
         foundWord += currChar;
         (*currLoc)++;
         currChar =  readFrom[*currLoc];
     }
 
     return foundWord;
+}
+
+/**
+ * @brief Reads the next word from the provided string. Starts at the value of provided pointer and ends at a space, new line character, or the end of the provided string. 
+ * Increments the value at the provided cursor to the index after the end of the word
+ * 
+ * @param readFrom The string to read a word fro,
+ * @param currLoc The location within that string to start reading at
+ * @return The word read  from the string
+ */
+std::string readWord(std::string readFrom,int currLoc){
+    int* temp = (int*) malloc(sizeof temp);
+    *temp = currLoc;
+
+    return readWord(readFrom,temp);
+
+    free(temp);
 }
 
 /**
@@ -133,6 +152,24 @@ std::string readLine(std::string readFrom, int* cursorLoc, int cutOff){
 
 }
 
+
+std::string formatAdditionAndSubtraction(std::string toFormat){
+    //Replaces all '+' chars with " + "
+    int currLoc = toFormat.find('+');
+    while(currLoc != std::string::npos){
+        toFormat.replace(currLoc,1," + ");
+        currLoc = toFormat.find('+',currLoc+2);
+    }
+    //Replaces all '-' chars with " - "
+    currLoc = toFormat.find('-');
+    while(currLoc != std::string::npos){
+        toFormat.replace(currLoc,1," - ");
+        currLoc = toFormat.find('-',currLoc+2);
+    }
+
+    return toFormat;
+}
+
 /**
  * @brief Takes in a string containing an i281 Assembly program. Removes the comments and unwanted whitespace from it.
  * 
@@ -150,6 +187,7 @@ std::string removeWhiteSpaceAndComments(std::string asmCode){
     while((*cursorLoc) < asmCode.length()){
 
        std::string currentLine = readLine(asmCode,cursorLoc);
+       
 
         //Checks if the line is a blank line
        if(currentLine == "\n"){
@@ -305,6 +343,7 @@ sectionLocs findCodeDataLoc(std::string asmCode){
 partedCode parseCode(std::string asmCode){
     //std::string code = readFromFile(asmCode);
     sectionLocs decLocs = findCodeDataLoc(asmCode);
+    asmCode = formatAdditionAndSubtraction(asmCode);
     asmCode =  removeWhiteSpaceAndComments(asmCode);
     partedCode codeInParts = seperateCodeAndData(asmCode);
     codeInParts.codeSec = moveJumpAds(codeInParts.codeSec);
@@ -362,10 +401,8 @@ std::string parseBrackets(std::string readFrom, int startLoc){
     }
 
 }
-
 int main(){
-    std::string test  = parseBrackets("[test statement]",0);
-    std::cout << test <<'\n';
-    test = parseBrackets("[test statment 2",0);
-    std::cout << test;
+    std::string test  = readFromFile("TestProgram.txt");
+    partedCode code = parseCode(test);
+    std::cout << code.codeSec;
 }

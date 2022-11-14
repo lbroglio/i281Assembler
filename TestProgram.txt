@@ -20,7 +20,7 @@ Outer:  STORE  [i], A             ; store i to memory
 Inner:  LOAD   D, [last]          ; D <- last
         CMP    B, D               ; j <= last ?
         BRG    Swap               ; if no, jump to the swap
-If:     LOADF  A, [array + B]     ; A <- array[j]
+If:     LOADF  A, [array+B]     ; A <- array[j]
         LOADF  D, [array + C]     ; D <- array[maxIndex]
         CMP    D, A               ; is D less than A?
         BRGE   Jinc               ; if no, go to increment j
