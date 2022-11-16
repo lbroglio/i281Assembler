@@ -206,7 +206,7 @@ std::string removeWhiteSpaceAndComments(std::string asmCode){
             if(curChar == ';'){
                 i += asmCode.length();
             }
-            else if (curChar == ','){
+            else if (curChar == ',' || curChar == '['){
                betweenChars = false;
                withoutComments+=curChar;
             }

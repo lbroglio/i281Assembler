@@ -22,7 +22,7 @@ const std::unordered_map<std::string,std::string> opeCodeMap =
 {
     {"NOOP","0000"},
     {"INPUTC","0001"},
-    {"INPUTCF","001"},
+    {"INPUTCF","0001"},
     {"INPUTD","0001"},
     {"INPUTDF","0001"},
     {"MOVE","0010"},
@@ -60,18 +60,77 @@ std::string machineCodeUnformmated = "";
 //Stores the value of a user provided vairable and its location in memory associated with its name
 std::unordered_map<std::string,usrVar> usrVarMap;
 
+
 /**
- * @brief Prints to the console that a variable was declared with a data type other than BYTE
+ * @brief Prints to the console that an error occured with a given message. Ends the program
  * 
  * @param lineNum The line number that error happened at
- * @param givenDataType 
+ * @param errorMessage What to print to the console along with the error
  */
-void unknownDataTypeError(int lineNum, std::string  givenDataType){
-    std::cout << "ERROR on line " << lineNum << ": A variable was declared with the data type " << givenDataType << " expected BYTE";
+void throwAssemblerError(std::string  errorMessage){
+    std::cout << "ERROR on line " << currLineNum << ": " << errorMessage;
     exit(1);
 }
 
 
+/**
+ * @brief Reads the contents of bracket [] and gets the location of the variable reference including any offset included in the brackets
+ * 
+ * @param reference The string to read the variable reference from
+ * @return The location in memory referenced by the code
+ */
+int readVarReference(std::string reference){
+    //Creates a cursor to read through the reference with 
+    int* cursor =  (int*) malloc(sizeof cursor);
+    *cursor = 0;
+
+    //Reads the first word in the referense assigns saves it as the name of the referenced variable
+    std::string varName = readWord(reference,cursor);
+
+    usrVar referencedVar;
+    //Gets the information about the variable from the map. Throws an error if this variable wasn't declared in the data section
+    try{
+         referencedVar = usrVarMap.at(varName);
+    }
+    catch(std::out_of_range){
+        throwAssemblerError("The variable " + varName +" was referenced without a declaration.");
+    }
+
+ 
+    //Gets the location of the variable in from the retrieved struct
+    int varMemLoc = referencedVar.memoryLoc;
+
+    *cursor += 2;
+    //Returns if this is the end of the reference
+    if(*cursor == reference.length()){
+        return varMemLoc;
+    }
+
+    //Makes sure the current character is a + or -. 
+    char decOperator = reference[*cursor];
+    if(decOperator != '+' && decOperator != '-'){
+        std::string temp = "";
+        temp += decOperator;
+        throwAssemblerError("Received illegal operator "+ temp + " expected + or -");
+    }
+
+
+    *cursor += 2;
+    //Throws an error if there is no integer after the given operator
+    if(*cursor == reference.length()){
+        throwAssemblerError("Expected an integer after " + decOperator);
+    }
+
+    //Returns the offset memory value
+    int shiftBy = (int) reference[*cursor];
+    if(decOperator == '+'){
+        return varMemLoc + shiftBy;
+    }
+    else{
+        return varMemLoc -shiftBy;
+    }
+    free(cursor);
+}
 
 /**
  * @brief Parses a users variable declaration. Associates its value and location and memory with its name in the usrVar map. 
@@ -97,8 +156,8 @@ void parseVarDec(std::string lineToParse, int* varCounter){
 
     //Ends the program and prints to the console if the data type is anything  besides BYTE
     if(dataType != "BYTE"){
-        int lineNum = asmCode.lineNums.dataLineNum + *varCounter;
-        unknownDataTypeError(lineNum, dataType);
+        currLineNum = asmCode.lineNums.dataLineNum + *varCounter;
+        throwAssemblerError("A variable was declared with the data type " +  dataType + " expected BYTE.");
     }
     *cursor +=1;
 
@@ -187,7 +246,7 @@ void parseNOPE(){
     machineCodeUnformmated += generatedMachineCodeLineRaw;
 }
 
-void  parseINPUTC(std::string  codeLine,int lineNuNum){
+void  parseINPUTC(std::string  codeLine){
     std::string generatedMachineCodeLine = opeCodeMap.at("INPUTC");
     std::string generatedMachineCodeLineRaw = opeCodeMap.at("INPUTC");
     generatedMachineCodeLine += "_00_00_";
@@ -199,21 +258,6 @@ void  parseINPUTC(std::string  codeLine,int lineNuNum){
     *cursor+=1;
 
     std::string bracketContents = parseBrackets(codeLine,*cursor);
-
-    int* bracketCursor =  (int*) malloc(sizeof bracketCursor);
-    *bracketCursor = 0;
-
-    std::string varName = readWord(bracketContents,bracketCursor);
-    
-    try{
-        usrVar referencedVar = usrVarMap.at(varName);
-    }
-    catch(std::out_of_range){
-        undefinedVariableError();
-    }
-    
-
-
 
 }
 

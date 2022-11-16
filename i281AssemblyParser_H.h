@@ -160,7 +160,6 @@ std::string formatAdditionAndSubtraction(std::string toFormat){
         toFormat.replace(currLoc,1," + ");
         currLoc = toFormat.find('+',currLoc+2);
     }
- 
     //Replaces all '-' chars with " - "
     currLoc = toFormat.find('-');
     while(currLoc != std::string::npos){
@@ -169,8 +168,6 @@ std::string formatAdditionAndSubtraction(std::string toFormat){
     }
 
     return toFormat;
-
-
 }
 
 /**
@@ -209,7 +206,7 @@ std::string removeWhiteSpaceAndComments(std::string asmCode){
             if(curChar == ';'){
                 i += asmCode.length();
             }
-            else if (curChar == ','){
+            else if (curChar == ',' || curChar == '['){
                betweenChars = false;
                withoutComments+=curChar;
             }
