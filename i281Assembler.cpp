@@ -2,7 +2,9 @@
 #include<string>
 #include <iostream>
 #include <unordered_map>
-#include "i281AssemblyParser_H.h"
+#include <vector>
+#include <bitset>
+#include "i281AssemblyParser_H.hpp"
 
 
 /**
@@ -55,8 +57,8 @@ partedCode asmCode;
 int currLineNum;
 //Stores the generated machine code as a string
 std::string machineCode = "";
-//Stores the generated machine code as a string as only the binary bits with no additonal formating
-std::string machineCodeUnformmated = "";
+//Stores a list of unformatted Machine Code Instructions
+std::vector<std::string> instructionList;
 //Stores the value of a user provided vairable and its location in memory associated with its name
 std::unordered_map<std::string,usrVar> usrVarMap;
 
@@ -72,6 +74,17 @@ void throwAssemblerError(std::string  errorMessage){
     exit(1);
 }
 
+/**
+ * @brief Checks if a provided memory address is out of bounds of the code memory
+ * 
+ * @param loc The given memory location
+ */
+void checkOutOfBoundsCodeMem(int loc){
+    if(loc < 0  || loc > 63){
+        throwAssemblerError("Index is out of bounds. Values must be between 0 - 63 inclusively");
+        exit(1);
+    }
+}
 
 /**
  * @brief Reads the contents of bracket [] and gets the location of the variable reference including any offset included in the brackets
@@ -100,9 +113,10 @@ int readVarReference(std::string reference){
     //Gets the location of the variable in from the retrieved struct
     int varMemLoc = referencedVar.memoryLoc;
 
-    *cursor += 2;
+    *cursor += 1;
     //Returns if this is the end of the reference
-    if(*cursor == reference.length()){
+    if(*cursor >= reference.length()){
+        free(cursor);
         return varMemLoc;
     }
 
@@ -117,19 +131,21 @@ int readVarReference(std::string reference){
 
     *cursor += 2;
     //Throws an error if there is no integer after the given operator
-    if(*cursor == reference.length()){
+    if(*cursor >= reference.length()){
         throwAssemblerError("Expected an integer after " + decOperator);
     }
 
     //Returns the offset memory value
-    int shiftBy = (int) reference[*cursor];
+    int shiftBy = (int) reference[*cursor] - '0';
     if(decOperator == '+'){
+        free(cursor);
         return varMemLoc + shiftBy;
     }
     else{
+        free(cursor);
         return varMemLoc -shiftBy;
     }
-    free(cursor);
+    
 }
 
 /**
@@ -171,8 +187,8 @@ void parseVarDec(std::string lineToParse, int* varCounter){
             temp.val = varVal - '0';
         }
         //Sets the value to zero if a ? is given
-        else{
-            varVal = 0;
+        else {
+            temp.val = 0;
         }
 
         //If a variable is being declared stores it in the variable map
@@ -180,7 +196,6 @@ void parseVarDec(std::string lineToParse, int* varCounter){
             temp.memoryLoc = *varCounter  -1;
             //If this variable is the second element in an array adds a number to the end of it to differentiate it
             std::string insertName =  varName + counterStr;
-
             usrVarMap.insert({insertName,temp});
 
             (*varCounter)++;
@@ -243,7 +258,7 @@ void parseNOPE(){
     generatedMachineCodeLine += "_00_00_00000000\n";
     generatedMachineCodeLineRaw += "000000000000\n";
     machineCode += generatedMachineCodeLine;
-    machineCodeUnformmated += generatedMachineCodeLineRaw;
+    instructionList.push_back(generatedMachineCodeLineRaw) ;
 }
 
 void  parseINPUTC(std::string  codeLine){
@@ -258,18 +273,38 @@ void  parseINPUTC(std::string  codeLine){
     *cursor+=1;
 
     std::string bracketContents = parseBrackets(codeLine,*cursor);
+    int referencedMemLoc = readVarReference(bracketContents);
+
+
+
+    std::bitset<8> asBinary;
+
+    asBinary = referencedMemLoc;
+
+    generatedMachineCodeLine += asBinary.to_string() + "\n";
+    generatedMachineCodeLineRaw += asBinary.to_string() + "\n";
+
+    machineCode += generatedMachineCodeLine;
+    instructionList.push_back(generatedMachineCodeLineRaw) ;
 
 }
 
 
 int main(){
     std::string rawCode = readFromFile("TestProgram.txt");
-
     asmCode = parseCode(rawCode);
     readDataSec();
+    
+    parseINPUTC("INPUTC [last + 5]");
+    std::cout << machineCode;
+    std::cout << instructionList.at(0);
 
+    /*
+    asmCode = parseCode(rawCode);
+    readDataSec();
+    */
 
-    std::cout <<asmCode.codeSec;
+    //std::cout <<asmCode.codeSec;
 
 
 
