@@ -2,7 +2,6 @@
 #include<string>
 #include <iostream>
 #include <unordered_map>
-#include <vector>
 #include <bitset>
 #include "i281AssemblyParser_H.hpp"
 
@@ -110,7 +109,7 @@ void checkOutOfBoundsDataMem(int loc){
  */
 void offSetOutOfBoundsWarning(int loc){
     std::cout << "On line " << currLineNum << " the program includes a memory access or write with an offset from a register. Depending on the value of the register at the time this could be out of bounds.";
-    std::cout << "\nIf the offset is zero the access memory location will be" << loc << '\n';
+    std::cout << "\nIf the offset is zero the access memory location will be " << loc << '\n';
 }
 /**
  * @brief Checks if the given value for a register is a legal one
@@ -128,9 +127,9 @@ void checkRegisterValid(std::string givenRegister){
  * @param givenRegister The given identifier for the register as a character
  */
 void checkRegisterValid(char givenRegister){
-    if(givenRegister != 'A' && givenRegister != 'B' && givenRegister != 'C' && givenRegister != 'D'){
-        std::string temp = "The given value " + givenRegister;
-        throwAssemblerError(temp + " is not a valid register. The value must be 00, 01, 10, or 11");
+    std::string givenRegisterS = givenRegister;
+    if(givenRegisterS != "A" && givenRegisterS != "B" && givenRegisterS != "C" && givenRegisterS != "D"){
+        throwAssemblerError("The given value " + givenRegisterS + " is not a valid register. The value must be 00, 01, 10, or 11");
     }
 }
 
@@ -434,6 +433,8 @@ int main(){
     std::string rawCode = readFromFile("TestProgram.txt");
     asmCode = parseCode(rawCode);
     readDataSec();
+
+    parseINPUT("INPUTCF [last + R + 13]");
 
     std::cout << machineCode;
     std::cout << instructionList[0];
