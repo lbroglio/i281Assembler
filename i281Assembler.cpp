@@ -3,6 +3,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <bitset>
+#include <vector>
 #include "i281AssemblyParser_H.hpp"
 
 
@@ -127,7 +128,8 @@ void checkRegisterValid(std::string givenRegister){
  * @param givenRegister The given identifier for the register as a character
  */
 void checkRegisterValid(char givenRegister){
-    std::string givenRegisterS = givenRegister;
+    std::string givenRegisterS = "";
+    givenRegisterS += givenRegister;
     if(givenRegisterS != "A" && givenRegisterS != "B" && givenRegisterS != "C" && givenRegisterS != "D"){
         throwAssemblerError("The given value " + givenRegisterS + " is not a valid register. The value must be 00, 01, 10, or 11");
     }
