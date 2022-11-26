@@ -367,11 +367,12 @@ std::string getOpeCode(std::string getFrom){
 
 /**
  * @brief Reads the first set of brackets after the given index startLoc. Returns everything between the two brackets.
- * If the brackets are not closed returns BRACKET_WAS_NOT_CLOSED
+ * If the brackets are not closed returns BRACKET_WAS_NOT_CLOSED.
+ * If no brackets are opened than returns NO_BRACKETS_IN_STRING
  * 
  * @param readFrom The string to read the bracket statement from
  * @param startLoc The index to start looking for brackets at
- * @return Everything within the set of brackets or BRACKET_WAS_NOT_CLOSED if they aren't closed 
+ * @return Everything within the set of brackets, BRACKET_WAS_NOT_CLOSED if they aren't closed, or NO_BRACKETS_IN_STRING if they aren't opened
  */
 std::string parseBrackets(std::string readFrom, int startLoc){
     int curLoc = startLoc;
@@ -379,9 +380,12 @@ std::string parseBrackets(std::string readFrom, int startLoc){
     std::string bracketContents = "";
 
 
-    while(curChar != '['){
+    while(curChar != '[' && curLoc != readFrom.length() -1 ){
         curLoc++;
         curChar= readFrom[curLoc];
+    }
+    if(curLoc == readFrom.length() -1){
+        return "NO_BRACKETS_IN_STRING";
     }
     curLoc ++;
     curChar =  readFrom[curLoc];
@@ -400,9 +404,4 @@ std::string parseBrackets(std::string readFrom, int startLoc){
         return bracketContents;
     }
 
-}
-int main(){
-    std::string test  = readFromFile("TestProgram.txt");
-    partedCode code = parseCode(test);
-    std::cout << code.codeSec;
 }
