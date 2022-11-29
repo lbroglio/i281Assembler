@@ -380,7 +380,7 @@ std::string parseBrackets(std::string readFrom, int startLoc){
     std::string bracketContents = "";
 
 
-    while(curChar != '[' && curLoc != readFrom.length() -1 ){
+    while(curChar != '[' && curLoc != readFrom.length() -1 && curChar != '{'){
         curLoc++;
         curChar= readFrom[curLoc];
     }
@@ -390,14 +390,14 @@ std::string parseBrackets(std::string readFrom, int startLoc){
     curLoc ++;
     curChar =  readFrom[curLoc];
 
-    while(curChar != ']' && curLoc < readFrom.length()){
+    while(curChar != ']' && curLoc < readFrom.length() && curChar != '}'){
         bracketContents += curChar;
         curLoc++;
         curChar =  readFrom[curLoc];
         
     }
 
-    if(curLoc == readFrom.length() && curChar != ']'){
+    if(curLoc == readFrom.length() && curChar != ']' && curChar != '}'){
         return "BRACKET_WAS_NOT_CLOSED";
     }
     else{

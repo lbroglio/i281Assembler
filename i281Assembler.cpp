@@ -119,7 +119,7 @@ void offSetOutOfBoundsWarning(int loc){
  */
 void checkRegisterValid(std::string givenRegister){
     if(givenRegister != "A" && givenRegister != "B" && givenRegister != "C" && givenRegister != "D"){
-        throwAssemblerError("The given value " + givenRegister + " is not a valid register. The value must be 00, 01, 10, or 11");
+        throwAssemblerError("The given value " + givenRegister + " is not a valid register. The value must be A, B, C, or D");
     }
 }
 /**
@@ -131,7 +131,7 @@ void checkRegisterValid(char givenRegister){
     std::string givenRegisterS = "";
     givenRegisterS += givenRegister;
     if(givenRegisterS != "A" && givenRegisterS != "B" && givenRegisterS != "C" && givenRegisterS != "D"){
-        throwAssemblerError("The given value " + givenRegisterS + " is not a valid register. The value must be 00, 01, 10, or 11");
+        throwAssemblerError("The given value " + givenRegisterS + " is not a valid register. The value must be A, B, C, or D");
     }
 }
 
@@ -333,10 +333,6 @@ void setJumpAddreses(){
 
     free(cursor);
 }
-void parseINPUT(){
-
-}
-
 
 /**
  * @brief Parses a line of code with the Ope code NOOP
@@ -357,7 +353,7 @@ void parseNOPE(){
  * @param codeLine The line of code to parse
  */
 void parseINPUT(std::string  codeLine){
-    //Adds the first 8 bits which are the identifiers of the Ope code and 2 don't cares and 2 0's 
+    //Adds the first 8 bits which are the identifiers of the Ope code 
     std::string generatedMachineCodeLine = opeCodeMap.at("INPUT");
     std::string generatedMachineCodeLineRaw = opeCodeMap.at("INPUT");
    
@@ -430,13 +426,150 @@ void parseINPUT(std::string  codeLine){
     instructionList.push_back(generatedMachineCodeLineRaw) ;
 
 }
+/**
+ * @brief Parses a line of code with the Ope code MOVE
+ * 
+ * @param codeLine The line of code to parse
+ */
+void parseMOVE(std::string codeLine){
+    //Adds the first 8 bits which are the identifiers of the Ope code 
+    std::string generatedMachineCodeLine = opeCodeMap.at("MOVE");
+    std::string generatedMachineCodeLineRaw = opeCodeMap.at("MOVE");
+
+     //Moves through the line past the Ope code
+    int* cursor =  (int*) malloc(sizeof cursor);
+    *cursor = 0;
+    readWord(codeLine,cursor);
+    *cursor+=1;
+
+    //Gets both of the given registers
+    std::string reg1 = readWord(codeLine,cursor);
+    *cursor+=1;
+    std::string reg2 = readWord(codeLine,cursor);
+
+    //Checks to make sure the registers are valid 
+    checkRegisterValid(reg1);
+    checkRegisterValid(reg2);
+
+    //Gets the binary identifiers for the registers
+    std::string reg1Identifier = registerNameMap.at(reg1[0]);
+    std::string reg2Identifier = registerNameMap.at(reg2[0]);
+    
+    //Adds the rest of the machine code 
+    generatedMachineCodeLine += "_" + reg1Identifier + "_" + reg2Identifier + "_00000000\n" ;
+    generatedMachineCodeLineRaw += reg1Identifier + reg2Identifier + "00000000" ;
+
+    free(cursor);
+
+    //Adds the created line to the rest of the program
+    machineCode += generatedMachineCodeLine;
+    instructionList.push_back(generatedMachineCodeLineRaw) ;
+
+}
+/**
+ * @brief Parses a line of code with the Ope code LOADI
+ * 
+ * @param codeLine The line of code to parse
+ */
+void parseLOADI(std::string codeLine){
+    //Adds the first 8 bits which are the identifiers of the Ope code 
+    std::string generatedMachineCodeLine = opeCodeMap.at("LOADI");
+    std::string generatedMachineCodeLineRaw = opeCodeMap.at("LOADI");
+
+     //Moves through the line past the Ope code
+    int* cursor =  (int*) malloc(sizeof cursor);
+    *cursor = 0;
+    readWord(codeLine,cursor);
+    *cursor+=1;
+
+    //Gets the register to load the value into 
+    std::string loadRegister = readWord(codeLine,cursor);
+    *cursor+=1;
+
+    //Checks to make sure the register is valid 
+    checkRegisterValid(loadRegister);
+
+
+
+    //Gets the binary identifiers for the registers
+    std::string regIdentifier = registerNameMap.at(loadRegister[0]);
+    
+    //Adds register and the don't care bits 
+    generatedMachineCodeLine += "_" + regIdentifier + "_00_" ;
+    generatedMachineCodeLineRaw += regIdentifier + "00";
+
+    //Gets the immediate value and converts it to binary
+    std::string imedValStr = readWord(codeLine,cursor);
+    int imedValInt = stoi(imedValStr);
+    std::bitset<8> imedValBnr;
+    imedValBnr = imedValInt;
+
+    //Adds the immediate value to the rest of the code
+    generatedMachineCodeLine += imedValBnr.to_string() + "\n";
+    generatedMachineCodeLineRaw += imedValBnr.to_string();
+
+    free(cursor);
+
+    //Adds the created line to the rest of the program
+    machineCode += generatedMachineCodeLine;
+    instructionList.push_back(generatedMachineCodeLineRaw);
+}
+/**
+ * @brief Parses a line of code with the Ope code LOADP
+ * 
+ * @param codeLine The line of code to parse
+ */
+void parseLOADP(std::string codeLine){
+    //Adds the first 8 bits which are the identifiers of the Ope code 
+    std::string generatedMachineCodeLine = opeCodeMap.at("LOADP");
+    std::string generatedMachineCodeLineRaw = opeCodeMap.at("LOADP");
+
+     //Moves through the line past the Ope code
+    int* cursor =  (int*) malloc(sizeof cursor);
+    *cursor = 0;
+    readWord(codeLine,cursor);
+    *cursor+=1;
+
+    //Gets the register to load the value into 
+    std::string loadRegister = readWord(codeLine,cursor);
+    *cursor+=1;
+
+    //Checks to make sure the register is valid 
+    checkRegisterValid(loadRegister);
+
+    //Gets the binary identifiers for the registers
+    std::string regIdentifier = registerNameMap.at(loadRegister[0]);
+    
+    //Adds register and the don't care bits 
+    generatedMachineCodeLine += "_" + regIdentifier + "_00_" ;
+    generatedMachineCodeLineRaw += regIdentifier + "00";
+
+    //Gets the pointer value and converts it to binary
+    std::string bracketContents = parseBrackets(codeLine,*cursor);
+    if(bracketContents == "BRACKET_WAS_NOT_CLOSED" || bracketContents == "NO_BRACKETS_IN_STRING"){
+        throwAssemblerError("Expected well formed brackets");
+    }
+    int pointerLoc = readVarReference(bracketContents);
+    std::bitset<8> pointerLocBnr;
+    pointerLocBnr = pointerLoc;
+
+    //Adds the immediate value to the rest of the code
+    generatedMachineCodeLine += pointerLocBnr.to_string() + "\n";
+    generatedMachineCodeLineRaw += pointerLocBnr.to_string();
+
+    free(cursor);
+
+    //Adds the created line to the rest of the program
+    machineCode += generatedMachineCodeLine;
+    instructionList.push_back(generatedMachineCodeLineRaw);
+}
 
 int main(){
     std::string rawCode = readFromFile("TestProgram.txt");
     asmCode = parseCode(rawCode);
     readDataSec();
 
-    parseINPUT("INPUTCF [last + R + 13]");
+    parseLOADP("LOADI D,{array}");
 
     std::cout << machineCode;
     std::cout << instructionList[0];
