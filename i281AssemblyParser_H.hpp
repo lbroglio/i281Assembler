@@ -405,3 +405,45 @@ std::string parseBrackets(std::string readFrom, int startLoc){
     }
 
 }
+
+/**
+ * @brief Reads the first set of brackets after the given index stored at the pointer cursor. Returns everything between the two brackets. 
+ * If the brackets are not closed returns BRACKET_WAS_NOT_CLOSED.
+ * If no brackets are opened than returns NO_BRACKETS_IN_STRING.
+ * Cursor will be set to the location after the closing bracket.
+ * 
+ * @param readFrom The string to read the bracket statement from
+ * @param startLoc The index to start looking for brackets at
+ * @return Everything within the set of brackets, BRACKET_WAS_NOT_CLOSED if they aren't closed, or NO_BRACKETS_IN_STRING if they aren't opened
+ */
+std::string parseBrackets(std::string readFrom, int* cursor){
+    char curChar =  readFrom[*cursor];
+    std::string bracketContents = "";
+
+
+    while(curChar != '[' && *cursor != readFrom.length() -1 && curChar != '{'){
+        *cursor += 1;
+        curChar= readFrom[*cursor];
+    }
+    if(*cursor == readFrom.length() - 1){
+        return "NO_BRACKETS_IN_STRING";
+    }
+    *cursor += 1;
+    curChar =  readFrom[*cursor];
+
+    while(curChar != ']' && *cursor < readFrom.length() && curChar != '}'){
+        bracketContents += curChar;
+        *cursor += 1;
+        curChar =  readFrom[*cursor];
+        
+    }
+
+    if(*cursor == readFrom.length() && curChar != ']' && curChar != '}'){
+        return "BRACKET_WAS_NOT_CLOSED";
+    }
+    else{
+        *cursor += 1;
+        return bracketContents;
+    }
+
+}
