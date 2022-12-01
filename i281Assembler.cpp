@@ -77,6 +77,10 @@ const std::unordered_map<char,std::string> registerNameMap =
 std::vector<int> varVals;
 //Stores the code imediately after it is read from the file without any parsing peformed on it
 std::string rawCode;
+//Stores the name of the users program
+std::string programName;
+//Stores the path to the users program
+std::string userFilePath;
 
 /**
  * @brief Prints to the console that an error occured with a given message. Ends the program
@@ -892,6 +896,10 @@ std::string parseBRANCH(std::string asmCodeLine, std::string opCode){
 
 }
 
+/**
+ * @brief Loops through the Assembly Program parses each line and generates its machine code
+ * 
+ */
 void convertAsmCode(){
     //Creates a cursor to read through the code
     int* cursor = (int*) malloc(sizeof cursor);
@@ -978,7 +986,11 @@ void convertAsmCode(){
     free(cursor);
 }
 
-
+/**
+ * @brief Formats the variables into a list of structs used by the output functions
+ * 
+ * @return A list of the information needed for outputting variables
+ */
 std::vector<usrVarOutput> formatVariablesOutput(){
     std::vector<usrVarOutput> outputVars;
 
@@ -1013,12 +1025,90 @@ std::vector<usrVarOutput> formatVariablesOutput(){
 
 }
 
+/**
+ * @brief  Formats the Branch locations into a list of structs used by the output functions
+ * 
+ * @return  A list of the information needed for outputting branch locations
+ */
+ std::vector<branchLocOutput> formatBranchLocsOutput(){
+       std::vector<branchLocOutput> outputBranches;
+
+    //Get a list of the keys (variable names)
+    std::vector<std::string> keys;
+    for (auto it = jumpAddressesMap.begin(); it != jumpAddressesMap.end(); it++) {
+        keys.push_back(it->first);
+    }
+
+    //Stores the name and value into structs and then returns them as a list
+    for(int i =0; i <keys.size(); i++){
+        branchLocOutput temp;
+        temp.name = keys[i];
+        temp.loc = jumpAddressesMap[keys[i]];
+
+        outputBranches.push_back(temp);
+    }
+    return outputBranches;
+
+ }
+
+/**
+ * @brief Outputs the Assembled code to necessary Verilog and Bin files
+ * 
+ */
+void outputCode(){
+    std::vector<usrVarOutput> outputVars = formatVariablesOutput();
+    std::vector<branchLocOutput> outputBranches = formatBranchLocsOutput();
+
+    //Writes the users code to verilog files
+    outputUserCode(instructionList,0,userFilePath,programName);
+    outputUserCode(instructionList,16,userFilePath,programName);
+
+    //Writes the users data to a verilog files
+    outputUserData(outputVars,userFilePath);
+
+    //Writes the .bin file
+    outputBinFile(rawCode,machineCodeProgram,programName,userFilePath,varVals,outputBranches);
+
+}
+
+/**
+ * @brief Prompts the user for a file and handles the users input
+ * 
+ * @return The users inputed file path 
+ */
+std::string getUserFile(){
+    std::cout << "Enter the file containing code to assemble: \n";
+    std::string usrInput;
+    std::cin >> usrInput;
+
+    int nameStartLocation = -1;
+    int extensionLocation = -1;
+    for(int i = usrInput.length(); i >= 0; i -= 1){
+        char curChar = usrInput[i];
+
+        if(curChar == '.' && extensionLocation == -1){
+            extensionLocation == i;
+        }
+
+        if(curChar == '/' && extensionLocation == -1 || curChar == '\\' && extensionLocation == -1){
+            nameStartLocation == i +1;
+        }
+    }
+
+    programName = usrInput.substr(nameStartLocation,extensionLocation-nameStartLocation);
+    userFilePath = usrInput.substr(0,usrInput.length() - nameStartLocation); 
+
+}
+
 int main(){
     rawCode = readFromFile("TestProgram.txt");
     asmCode = parseCode(rawCode);
     readDataSec();
     setJumpAddreses();
     convertAsmCode();
+    userFilePath = "";
+    programName = "TestProgram";
+    outputCode();
 
     std::cout << machineCodeProgram;
 
