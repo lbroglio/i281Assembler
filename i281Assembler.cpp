@@ -5,6 +5,7 @@
 #include <bitset>
 #include <vector>
 #include "i281AssemblyParser_H.hpp"
+#include "i281AssemblerOutput_H.hpp"
 
 
 /**
@@ -72,6 +73,10 @@ const std::unordered_map<char,std::string> registerNameMap =
     {'D',"11"}
 
 };
+//Stores a list of the values of user variables for use in outputing
+std::vector<int> varVals;
+//Stores the code imediately after it is read from the file without any parsing peformed on it
+std::string rawCode;
 
 /**
  * @brief Prints to the console that an error occured with a given message. Ends the program
@@ -91,7 +96,7 @@ void throwAssemblerError(std::string  errorMessage){
  */
 void checkOutOfBoundsCodeMem(int loc){
     if(loc < 0  || loc > 63){
-        throwAssemblerError("Index is out of bounds. Values must be between 0 - 31 inclusively");
+        throwAssemblerError("Index is out of bounds. Values must be between 0 - 63 inclusively");
         exit(1);
     }
 }
@@ -295,7 +300,7 @@ void parseVarDec(std::string lineToParse, int* varCounter){
         if(varVal != ','){
             temp.memoryLoc = *varCounter  -1;
             //If this variable is the second element in an array adds a number to the end of it to differentiate it
-            std::string insertName =  varName + counterStr;
+            std::string insertName =  varName + "[" + counterStr + "]";
             usrVarMap.insert({insertName,temp});
 
             (*varCounter)++;
@@ -321,6 +326,10 @@ void readDataSec(){
     while(*cursor < asmCode.dataSec.length()){
          std::string currLine = readLine(asmCode.dataSec,cursor,1);
          parseVarDec(currLine,varCounter);
+    }
+
+    if(*varCounter > 15){
+
     }
    
    free(cursor);
@@ -969,13 +978,48 @@ void convertAsmCode(){
     free(cursor);
 }
 
+
+std::vector<usrVarOutput> formatVariablesOutput(){
+    std::vector<usrVarOutput> outputVars;
+
+    //Get a list of the keys (variable names)
+    std::vector<std::string> keys;
+    for (auto it = usrVarMap.begin(); it != usrVarMap.end(); it++) {
+        keys.push_back(it->first);
+    }
+
+    //Does additonal formatting on any declared arrays 
+    int prevBracket = keys[0].find('[');
+    for(int i =1; i <keys.size(); i++){
+        int currBracket = keys[i].find('[');
+
+        if(prevBracket == std::string::npos && currBracket != std::string::npos){
+            keys[i-1] = keys[i-1] + "[0]";
+        }
+
+        prevBracket = currBracket;
+    }
+
+    //Stores the name and value into structs and then returns them as a list
+    for(int i =0; i <keys.size(); i++){
+        usrVarOutput temp;
+        temp.name = keys[i];
+        temp.val = usrVarMap[keys[i]].val;
+        varVals.push_back(usrVarMap[keys[i]].val);
+
+        outputVars.push_back(temp);
+    }
+    return outputVars;
+
+}
+
 int main(){
-    std::string rawCode = readFromFile("TestProgram.txt");
+    rawCode = readFromFile("TestProgram.txt");
     asmCode = parseCode(rawCode);
     readDataSec();
     setJumpAddreses();
-    //convertAsmCode();
-    std::cout << parseINPUT("[last + A + 3]","INPUTC");
+    convertAsmCode();
+
     std::cout << machineCodeProgram;
 
 }
