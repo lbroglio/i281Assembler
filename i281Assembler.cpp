@@ -19,8 +19,8 @@ struct usrVar{
 
 //Global Variables
 
-//Maps Ope Codes to there 4 bit machine code identifier. 
-const std::unordered_map<std::string,std::string> opeCodeMap = 
+//Maps OpCodes to there 4 bit machine code identifier. 
+const std::unordered_map<std::string,std::string> opCodeMap = 
 {
     {"NOOP","0000"},
     {"INPUTC","0001"},
@@ -91,7 +91,7 @@ void throwAssemblerError(std::string  errorMessage){
  */
 void checkOutOfBoundsCodeMem(int loc){
     if(loc < 0  || loc > 63){
-        throwAssemblerError("Index is out of bounds. Values must be between 0 - 63 inclusively");
+        throwAssemblerError("Index is out of bounds. Values must be between 0 - 31 inclusively");
         exit(1);
     }
 }
@@ -114,8 +114,11 @@ void checkOutOfBoundsDataMem(int loc){
  * @param loc The location without the offset
  */
 void offSetOutOfBoundsWarning(int loc){
-    std::cout << "On line " << currLineNum << " the program includes a memory access or write with an offset from a register. Depending on the value of the register at the time this could be out of bounds.";
-    std::cout << "\nIf the offset is zero the access memory location will be " << loc << "\n\n";
+     if(loc < 0  || loc > 63){
+        std::cout << "On line " << currLineNum << " the program includes a memory access or write with an offset from a register. Depending on the value of the register at the time this could be out of bounds.";
+        std::cout << "\nIf the offset is zero the access memory location will be " << loc << "\n\n";
+    }
+    
 }
 /**
  * @brief Checks if the given value for a register is a legal one
@@ -224,8 +227,16 @@ int readVarReference(std::string reference){
         throwAssemblerError("Expected an integer after " + decOperator);
     }
     std::string offSetNum = reference.substr(*cursor);
+     int shiftBy;
 
-    int shiftBy = stoi(offSetNum);
+    //Converts the offSetNum to an integer throws an assembler error if it cannot 
+    try{
+        shiftBy = stoi(offSetNum);
+    }
+    catch(std::invalid_argument){
+        throwAssemblerError(offSetNum +" is not a valid constant to offset a memory location by.");
+    }
+    
     if(decOperator == '+'){
         free(cursor);
         return varMemLoc + shiftBy;
@@ -347,7 +358,7 @@ void setJumpAddreses(){
  * @param toFormat - The machine code line to format
  * @return - The formatted machine code
  */
-std::string formatMachineCodeLineReadable(std::string toFormat){
+std::string formatMachineCodeLine(std::string toFormat){
     return toFormat.substr(0,4) + "_" + toFormat.substr(4,2) + "_" + toFormat.substr(6,2) + "_" + toFormat.substr(8);
 }
 
@@ -390,7 +401,7 @@ std::string getLineJumpImedVal(std::string jumpAddress){
 }
 
 /**
- * @brief Parses a line of code with the Ope code NOOP
+ * @brief Parses a line of code with the OpCpde NOOP
  * 
  * @return The machine code instruction of this line
  */
@@ -399,14 +410,14 @@ std::string parseNOOP(){
 }
 
 /**
- * @brief Parses a line of code with the Ope codes INPUTC, INPUTCF, INPUTD, INPUTDF. 
+ * @brief Parses a line of code with the OpCodes INPUTC, INPUTCF, INPUTD, INPUTDF. 
  * 
  * @param codeLine The line of code to parse
- * @param opeCode This line of codes OpeCode
+ * @param opCode This line of codes opCode
  * 
  * @return The machine code instruction of this line
  */
-std::string parseINPUT(std::string asmCodeLine, std::string opeCode){
+std::string parseINPUT(std::string asmCodeLine, std::string opCode){
     std::string generatedMachineCode = "";
    //Cursor to read through line
     int* cursor =  (int*) malloc(sizeof cursor);
@@ -418,22 +429,22 @@ std::string parseINPUT(std::string asmCodeLine, std::string opeCode){
         throwAssemblerError("Expected well formed brackets");
     }
 
-    //If the Ope code is INPUTC or INPUTD sets the next 4 bits to there values
-    if(opeCode == "INPUTC" ){
+    //If the OpCpde is INPUTC or INPUTD sets the next 4 bits to there values
+    if(opCode == "INPUTC" ){
         generatedMachineCode += "0000";
     }
-    else if(opeCode == "INPUTD"){
+    else if(opCode == "INPUTD"){
         generatedMachineCode += "0010";
     }
-    //If the Ope code is INPUTCF or INPUTDF gets the offset register and then sets the next four bits
+    //If the OpCpde is INPUTCF or INPUTDF gets the offset register and then sets the next four bits
     else{
         //Reads and removes the register to offset by
         std::string* contentsPointer = &bracketContents;
         char offsetRegister = readRegisterOffset(contentsPointer);
         generatedMachineCode += registerNameMap.at(offsetRegister);
 
-        //Sets the next two bits depending on the Ope code
-        if(opeCode == "INPUTCF"){
+        //Sets the next two bits depending on the OpCpde
+        if(opCode == "INPUTCF"){
             generatedMachineCode += "01";
         }
         else{
@@ -444,15 +455,15 @@ std::string parseINPUT(std::string asmCodeLine, std::string opeCode){
     int referencedMemLoc = readVarReference(bracketContents);
     
     //Checks if the given location is out of bounds
-    if(opeCode == "INPUTC" || opeCode== "INPUTCF"){
+    if(opCode == "INPUTC"){
          checkOutOfBoundsCodeMem(referencedMemLoc);
     }
-    else{
+    else if (opCode == "INPUTD"){
          checkOutOfBoundsDataMem(referencedMemLoc);
     }
 
     //Warns the user that if the offset could go outside the code memory
-    if(opeCode == "INPUTCF" || opeCode == "INPUTDF"){
+    if(opCode == "INPUTCF" || opCode == "INPUTDF"){
         offSetOutOfBoundsWarning(referencedMemLoc);
     }
     
@@ -467,7 +478,7 @@ std::string parseINPUT(std::string asmCodeLine, std::string opeCode){
     return generatedMachineCode;
 }
 /**
- * @brief Parses a line of code with the Ope code MOVE
+ * @brief Parses a line of code with the OpCpde MOVE
  * 
  * @param codeLine The line of code to parse
  * 
@@ -500,7 +511,7 @@ std::string parseMOVE(std::string asmCodeLine){
 }
 
 /**
- * @brief Parses a line of code with the Ope code LOADI
+ * @brief Parses a line of code with the OpCpde LOADI
  * 
  * @param codeLine The line of code to parse
  * 
@@ -542,7 +553,7 @@ std::string parseLOADI(std::string asmCodeLine){
 }
 
 /**
- * @brief Parses a line of code with the Ope code LOADP
+ * @brief Parses a line of code with the OpCpde LOADP
  * 
  * @param codeLine The line of code to parse
  * 
@@ -585,7 +596,7 @@ std::string parseLOADP(std::string asmCodeLine){
 }
 
 /**
- * @brief Parses a line of code with the Ope code ADD, SUB, or CMP
+ * @brief Parses a line of code with the OpCpde ADD, SUB, or CMP
  *
  * @param codeLine The line of code to parse
  * 
@@ -609,7 +620,7 @@ std::string parseADDxSUBxCMP(std::string asmCodeLine){
 }
 
 /**
- * @brief Parses a line of code with the Ope code ADDI or SUBI
+ * @brief Parses a line of code with the OpCpde ADDI or SUBI
  *
  * @param codeLine The line of code to parse
  * 
@@ -644,14 +655,14 @@ std::string parseADDIxSUBI(std::string asmCodeLine){
 }
 
 /**
- * @brief Parses a line of code with the Ope codes LOAD, LOADF
+ * @brief Parses a line of code with the OpCodes LOAD, LOADF
  * 
  * @param codeLine The line of code to parse
- * @param opeCode This line of codes OpeCode
+ * @param opCode This line of codes opCode
  * 
  * @return The machine code instruction of this line
  */
-std::string parseLOAD(std::string asmCodeLine, std::string opeCode){
+std::string parseLOAD(std::string asmCodeLine, std::string opCode){
     std::string generatedMachineCode = "";
    //Cursor to read through line
     int* cursor =  (int*) malloc(sizeof cursor);
@@ -676,11 +687,11 @@ std::string parseLOAD(std::string asmCodeLine, std::string opeCode){
         throwAssemblerError("Expected well formed brackets");
     }
 
-    //If the Ope code is LOAD sets the next 2 bits as don't cares
-    if(opeCode == "LOAD"){
+    //If the OpCpde is LOAD sets the next 2 bits as don't cares
+    if(opCode == "LOAD"){
         generatedMachineCode += "00";
     }
-    //If the Ope code is LOADF sets the offset register and then sets the next two bits
+    //If the OpCpde is LOADF sets the offset register and then sets the next two bits
     else{
         //Reads and removes the register to offset by
         std::string* contentsPointer = &bracketContents;
@@ -694,7 +705,7 @@ std::string parseLOAD(std::string asmCodeLine, std::string opeCode){
      checkOutOfBoundsDataMem(referencedMemLoc);
     
     //Warns the user that if the offset could go outside the data memory
-    if(opeCode == "LOADF"){
+    if(opCode == "LOADF"){
         offSetOutOfBoundsWarning(referencedMemLoc);
     }
     
@@ -709,14 +720,14 @@ std::string parseLOAD(std::string asmCodeLine, std::string opeCode){
     return generatedMachineCode;
 }
 /**
- * @brief Parses a line of code with the Ope codes LOAD, LOADF
+ * @brief Parses a line of code with the OpCodes LOAD, LOADF
  * 
  * @param codeLine The line of code to parse
- * @param opeCode This line of codes OpeCode
+ * @param opCode This line of codes opCode
  * 
  * @return The machine code instruction of this line
  */
-std::string parseSTORE(std::string asmCodeLine, std::string opeCode){
+std::string parseSTORE(std::string asmCodeLine, std::string opCode){
     std::string generatedMachineCode = "";
    //Cursor to read through line
     int* cursor =  (int*) malloc(sizeof cursor);
@@ -744,11 +755,11 @@ std::string parseSTORE(std::string asmCodeLine, std::string opeCode){
     generatedMachineCode += accessRegIndentifier;
 
 
-    //If the Ope code is STORE sets the next 2 bits as don't cares
-    if(opeCode == "STORE"){
+    //If the OpCpde is STORE sets the next 2 bits as don't cares
+    if(opCode == "STORE"){
         generatedMachineCode += "00";
     }
-    //If the Ope code is STOREF gets the offset register and then sets the next two bits
+    //If the OpCpde is STOREF gets the offset register and then sets the next two bits
     else{
         //Reads and removes the register to offset by
         std::string* contentsPointer = &bracketContents;
@@ -763,7 +774,7 @@ std::string parseSTORE(std::string asmCodeLine, std::string opeCode){
      checkOutOfBoundsDataMem(referencedMemLoc);
     
     //Warns the user that if the offset could go outside the data memory
-    if(opeCode == "STOREF"){
+    if(opCode == "STOREF"){
         offSetOutOfBoundsWarning(referencedMemLoc);
     }
 
@@ -780,14 +791,14 @@ std::string parseSTORE(std::string asmCodeLine, std::string opeCode){
 }
 
 /**
- * @brief Parses a line of code with the Ope codes SHIFTL, or SHIFTR
+ * @brief Parses a line of code with the OpCodes SHIFTL, or SHIFTR
  * 
  * @param codeLine The line of code to parse
- * @param opeCode This line of codes OpeCode
+ * @param opCode This line of codes opCode
  * 
  * @return The machine code instruction of this line
  */
-std::string parseSHIFT(std::string asmCodeLine, std::string opeCode){
+std::string parseSHIFT(std::string asmCodeLine, std::string opCode){
     std::string generatedMachineCode = "";
    //Cursor to read through line
     int* cursor =  (int*) malloc(sizeof cursor);
@@ -806,7 +817,7 @@ std::string parseSHIFT(std::string asmCodeLine, std::string opeCode){
     //Adds the indentifier to the machine code
     generatedMachineCode += shiftRegIndentifier;
 
-    if(opeCode ==  "SHIFTL"){
+    if(opCode ==  "SHIFTL"){
         generatedMachineCode += "0000000000";
     }
     else{
@@ -817,7 +828,7 @@ std::string parseSHIFT(std::string asmCodeLine, std::string opeCode){
     return generatedMachineCode;
 }
 /**
- * @brief Parses a line of code with the Ope code JUMP
+ * @brief Parses a line of code with the OpCpde JUMP
  * 
  * @param codeLine The line of code to parse
  * 
@@ -837,24 +848,24 @@ std::string parseJUMP(std::string asmCodeLine){
    
 }
 /**
- * @brief Parses a line of code with the Ope codes BRE, BRZ, BRNE, BRNZ, BRG, or BRGE
+ * @brief Parses a line of code with the OpCodes BRE, BRZ, BRNE, BRNZ, BRG, or BRGE
  * 
  * @param codeLine The line of code to parse
- * @param opeCode This line of codes OpeCode
+ * @param opCode This line of codes opCode
  * 
  * @return The machine code instruction of this line
  */
-std::string parseBRANCH(std::string asmCodeLine, std::string opeCode){
+std::string parseBRANCH(std::string asmCodeLine, std::string opCode){
      std::string generatedMachineCode = "00";
 
-    //Adds the next two bits depending on the Ope code
-     if(opeCode == "BRE" || opeCode == "BRZ"){
+    //Adds the next two bits depending on the OpCpde
+     if(opCode == "BRE" || opCode == "BRZ"){
         generatedMachineCode += "00";
     }
-    else if(opeCode == "BRNE" || opeCode == "BRNZ"){
+    else if(opCode == "BRNE" || opCode == "BRNZ"){
          generatedMachineCode += "01";
     }
-    else if(opeCode == "BRG"){
+    else if(opCode == "BRG"){
         generatedMachineCode += "10";
     }
     else{
@@ -880,6 +891,11 @@ void convertAsmCode(){
     while(*cursor < asmCode.codeSec.length()){
         //Sets the line number
         currLineNum = codeSecLineNum + asmCode.lineNums.codeLineNum;
+
+         //Makes sure the program isn't to long
+        if(codeSecLineNum > 32){
+            throwAssemblerError("The providec code is to long. The maximum length is 32 instructions.");
+        }
     
         //Gets the current line of code 
         std::string currLine = readLine(asmCode.codeSec,cursor,1);
@@ -888,62 +904,63 @@ void convertAsmCode(){
         int* lineCursor = (int*) malloc(sizeof cursor);
         *lineCursor = 0;
 
-        //Reads the Ope code of the current line
-        std::string opeCode = readWord(currLine,lineCursor);
+        //Reads the OpCpde of the current line
+        std::string opCode = readWord(currLine,lineCursor);
         *lineCursor +=1;
 
-        //Gets the current  line without the Ope code to be sent to the parsing functions
+        if(opCodeMap.count(opCode) == 0){
+            throwAssemblerError("The provided OpCpde " + opCode + " is not valid");
+        }
+
+        //Gets the current  line without the OpCpde to be sent to the parsing functions
         std::string lineToParse = currLine.substr(*lineCursor);
        
-        //Creates the line of machine code and adds the Ope Code's binary identifier to it
-        std::string machineCodeLine = opeCodeMap.at(opeCode);
+        //Creates the line of machine code and adds the OpCpde's binary identifier to it
+        std::string machineCodeLine = opCodeMap.at(opCode);
 
-        //Parses the code based on the Ope Code
-        if(opeCode == "NOOP"){
+        //Parses the code based on the OpCpde
+        if(opCode == "NOOP"){
             machineCodeLine += parseNOOP();
         }
-        else if(opeCode == "INPUTC" || opeCode == "INPUTCF" || opeCode == "INPUTD" || opeCode == "INPUTDF"){
-            machineCodeLine += parseINPUT(lineToParse,opeCode);
+        else if(opCode == "INPUTC" || opCode == "INPUTCF" || opCode == "INPUTD" || opCode == "INPUTDF"){
+            machineCodeLine += parseINPUT(lineToParse,opCode);
         }
-        else if(opeCode == "MOVE"){
+        else if(opCode == "MOVE"){
             machineCodeLine += parseMOVE(lineToParse);
         }
-        else if(opeCode == "LOADI"){
+        else if(opCode == "LOADI"){
             machineCodeLine += parseLOADI(lineToParse);
         }
-        else if(opeCode == "LOADP"){
+        else if(opCode == "LOADP"){
             machineCodeLine += parseLOADP(lineToParse);
         }
-        else if(opeCode == "ADD" || opeCode == "SUB" || opeCode == "CMP"){
+        else if(opCode == "ADD" || opCode == "SUB" || opCode == "CMP"){
             machineCodeLine += parseADDxSUBxCMP(lineToParse);
         }
-        else if(opeCode == "ADDI" || opeCode == "SUBI"){
+        else if(opCode == "ADDI" || opCode == "SUBI"){
             machineCodeLine += parseADDIxSUBI(lineToParse);
         }
-        else if(opeCode == "LOAD" || opeCode == "LOADF"){
-            machineCodeLine += parseLOAD(lineToParse,opeCode);
+        else if(opCode == "LOAD" || opCode == "LOADF"){
+            machineCodeLine += parseLOAD(lineToParse,opCode);
         }
-        else if(opeCode == "STORE" || opeCode == "STOREF"){
-            machineCodeLine += parseSTORE(lineToParse,opeCode);
+        else if(opCode == "STORE" || opCode == "STOREF"){
+            machineCodeLine += parseSTORE(lineToParse,opCode);
         }
-        else if(opeCode == "SHIFT"){
-            machineCodeLine += parseSHIFT(lineToParse,opeCode);
+        else if(opCode == "SHIFT"){
+            machineCodeLine += parseSHIFT(lineToParse,opCode);
         }
-        else if(opeCode == "JUMP"){
+        else if(opCode == "JUMP"){
             machineCodeLine += parseJUMP(lineToParse);
         }
-        else if(opeCode == "BRE" || opeCode == "BRZ" || opeCode == "BRNE" || opeCode == "BRNZ" || opeCode == "BRG" || opeCode == "BRGE" ){
-            machineCodeLine += parseBRANCH(lineToParse,opeCode);
-        }
-        else{
-            throwAssemblerError("The provided Ope Code " + opeCode + " is not valid");
+        else if(opCode == "BRE" || opCode == "BRZ" || opCode == "BRNE" || opCode == "BRNZ" || opCode == "BRG" || opCode == "BRGE" ){
+            machineCodeLine += parseBRANCH(lineToParse,opCode);
         }
         //Increases the code line number by one
         codeSecLineNum += 1;
 
         //Adds the created code to the rest of the program
-        machineCodeProgram += formatMachineCodeLineReadable(machineCodeLine) + "\n";
-        instructionList.push_back(machineCodeLine);
+        machineCodeProgram += formatMachineCodeLine(machineCodeLine) + "\n";
+        instructionList.push_back(formatMachineCodeLine(machineCodeLine));
 
         free(lineCursor);
         
@@ -957,8 +974,8 @@ int main(){
     asmCode = parseCode(rawCode);
     readDataSec();
     setJumpAddreses();
-    convertAsmCode();
-
+    //convertAsmCode();
+    std::cout << parseINPUT("[last + A + 3]","INPUTC");
     std::cout << machineCodeProgram;
 
 }
