@@ -242,7 +242,6 @@ int readVarReference(std::string reference){
 
     //Converts the offSetNum to an integer throws an assembler error if it cannot 
     try{
-        std::cout << shiftBy;
         shiftBy = stoi(offSetNum);
     }
     catch(std::invalid_argument){
@@ -553,8 +552,6 @@ std::string parseLOADI(std::string asmCodeLine){
 
     //Gets the immediate value and converts it to binary
     std::string imedValStr = readWord(asmCodeLine,cursor);
-    std::cout << asmCodeLine << "\n";
-    std::cout << imedValStr <<"\n";
     int imedValInt = stoi(imedValStr);
    
     std::string imedValue = parseConstantImedValue(imedValInt);
@@ -606,7 +603,6 @@ std::string parseLOADP(std::string asmCodeLine){
     generatedMachineCode += pointerLocBnr.to_string();
 
     free(cursor);
-    std::cout << generatedMachineCode << "\n";
     return generatedMachineCode;
 }
 
@@ -1068,6 +1064,8 @@ void outputCode(){
     //Writes the .bin file
     outputBinFile(rawCode,machineCodeProgram,programName,userFilePath,varVals,outputBranches);
 
+    //Writes to the console
+    outputToConsole(rawCode,machineCodeProgram,varVals,outputBranches);
 }
 
 /**
@@ -1114,5 +1112,4 @@ int main(){
     programName = "TestProgram";
     outputCode();
 
-    std::cout << machineCodeProgram;
 }
