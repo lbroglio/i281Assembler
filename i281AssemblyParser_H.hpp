@@ -152,7 +152,12 @@ std::string readLine(std::string readFrom, int* cursorLoc, int cutOff){
 
 }
 
-
+/**
+ * @brief Formats addition and subtraction operations to the desired state by the assembler
+ * 
+ * @param toFormat The string to format addition and subtraction within
+ * @return The string with guranteed spaceing between + and  - symbols 
+ */
 std::string formatAdditionAndSubtraction(std::string toFormat){
     //Replaces all '+' chars with " + "
     int currLoc = toFormat.find('+');
@@ -341,9 +346,9 @@ sectionLocs findCodeDataLoc(std::string asmCode){
  * @return A struct containing the parsed code 
  */
 partedCode parseCode(std::string asmCode){
-    //std::string code = readFromFile(asmCode);
     sectionLocs decLocs = findCodeDataLoc(asmCode);
-    asmCode = formatAdditionAndSubtraction(asmCode);
+    //This is being refactored to a different section of the program (Formatted within brackets themselves) but is being kept here as an option 
+    //asmCode = formatAdditionAndSubtraction(asmCode);
     asmCode =  removeWhiteSpaceAndComments(asmCode);
     partedCode codeInParts = seperateCodeAndData(asmCode);
     codeInParts.codeSec = moveJumpAds(codeInParts.codeSec);
@@ -375,6 +380,10 @@ std::string getOpeCode(std::string getFrom){
  * @return Everything within the set of brackets, BRACKET_WAS_NOT_CLOSED if they aren't closed, or NO_BRACKETS_IN_STRING if they aren't opened
  */
 std::string parseBrackets(std::string readFrom, int startLoc){
+    //Makes sure  + and - signs are in the desired way
+    readFrom = formatAdditionAndSubtraction(readFrom);
+    readFrom = removeWhiteSpaceAndComments(readFrom);
+
     int curLoc = startLoc;
     char curChar =  readFrom[curLoc];
     std::string bracketContents = "";
@@ -417,6 +426,10 @@ std::string parseBrackets(std::string readFrom, int startLoc){
  * @return Everything within the set of brackets, BRACKET_WAS_NOT_CLOSED if they aren't closed, or NO_BRACKETS_IN_STRING if they aren't opened
  */
 std::string parseBrackets(std::string readFrom, int* cursor){
+    //Makes sure  + and - signs are in the desired way
+    readFrom = formatAdditionAndSubtraction(readFrom);
+    readFrom = removeWhiteSpaceAndComments(readFrom);
+
     char curChar =  readFrom[*cursor];
     std::string bracketContents = "";
 

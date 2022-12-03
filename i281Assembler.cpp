@@ -75,6 +75,8 @@ const std::unordered_map<char,std::string> registerNameMap =
 };
 //Stores a list of the values of user variables for use in outputing
 std::vector<int> varVals;
+//Stores the names of the variables in order
+std::vector<std::string> varNames;
 //Stores the code imediately after it is read from the file without any parsing peformed on it
 std::string rawCode;
 //Stores the name of the users program
@@ -236,10 +238,11 @@ int readVarReference(std::string reference){
         throwAssemblerError("Expected an integer after " + decOperator);
     }
     std::string offSetNum = reference.substr(*cursor);
-     int shiftBy;
+    int shiftBy;
 
     //Converts the offSetNum to an integer throws an assembler error if it cannot 
     try{
+        std::cout << shiftBy;
         shiftBy = stoi(offSetNum);
     }
     catch(std::invalid_argument){
@@ -288,29 +291,30 @@ void parseVarDec(std::string lineToParse, int* varCounter){
 
     //Loops through the rest of the line until it runs out of variable values - needed in case the user declares an array
     while(* cursor < lineToParse.length()){
-        char varVal = lineToParse[*cursor];
+        std::string varVal = readWord(lineToParse,cursor);
         usrVar temp;
 
         //Checks if the user has declared a number value at this char
-        if(varVal != ',' && varVal != '?'){
-            temp.val = varVal - '0';
+        if(varVal != "?"){
+            temp.val = stoi(varVal);
         }
         //Sets the value to zero if a ? is given
         else {
             temp.val = 0;
         }
 
-        //If a variable is being declared stores it in the variable map
-        if(varVal != ','){
-            temp.memoryLoc = *varCounter  -1;
-            //If this variable is the second element in an array adds a number to the end of it to differentiate it
-            std::string insertName =  varName + "[" + counterStr + "]";
-            usrVarMap.insert({insertName,temp});
+        //Stores the variable in the map and the name list
+        temp.memoryLoc = *varCounter  -1;
+        //If this variable is the second element in an array adds a number to the end of it to differentiate it
+        std::string insertName =  varName + counterStr;
+        varNames.push_back(insertName);
+        usrVarMap.insert({insertName,temp});
 
-            (*varCounter)++;
-            arrCounter++;
-            counterStr = (char) ('0' + arrCounter);
-        }
+        (*varCounter)++;
+        arrCounter++;
+        counterStr = "[";
+        counterStr += (char) ('0' + arrCounter);
+        counterStr += "]";
         *cursor += 1;
         
     }
@@ -333,7 +337,7 @@ void readDataSec(){
     }
 
     if(*varCounter > 15){
-
+        throwAssemblerError("You cannot have more than 16 BYTES in your data segment");
     }
    
    free(cursor);
@@ -375,17 +379,7 @@ std::string formatMachineCodeLine(std::string toFormat){
     return toFormat.substr(0,4) + "_" + toFormat.substr(4,2) + "_" + toFormat.substr(6,2) + "_" + toFormat.substr(8);
 }
 
-/**
- * @brief Inverts the given binary number into its negagive equivalents in 2s complement
- * ex.  5 = 0101 -> 1011 = -5 
- * 
- * @param numToInvert - The binary number to convert to its negative equivalent in 2s complement
- * 
- * @return The number converted to its negative 2s complement equivalent
- */
-std::bitset<8> inverse2sComplement(std::bitset<8> numToInvert){
-    return std::bitset<8>((~numToInvert).to_ulong() + 1);
-}
+
 /**
  * @brief Gets the imdevalue bits needed for a code line with the given jump address as a 2s complement binary number
  * 
@@ -400,17 +394,23 @@ std::string getLineJumpImedVal(std::string jumpAddress){
     int diffInAdds = jumpAddressLineNum - codeSecLineNum;
 
     //Converts the difference to 2's complement binary
-    std::bitset<8> bnrAddress;
-    if(diffInAdds >= 0){
-        bnrAddress = diffInAdds;
-    }
-    else{
-        diffInAdds *= -1;
-        bnrAddress = diffInAdds;
-        bnrAddress =  inverse2sComplement(bnrAddress);
-    }
+    std::bitset<8> bnrAddress = diffInAdds;
 
     return bnrAddress.to_string();
+}
+
+
+/**
+ * @brief Converts a User Inputed constant to a 2's complement binary imedvalue
+ * 
+ * @param givenConstant The constant provided by the user
+ * @return The 2's complement binary representation of the constant stored as a string
+ */
+std::string parseConstantImedValue(int givenConstant){
+    //Converts the constant to 2's complement binary
+    std::bitset<8> bnrImedVal = givenConstant;
+
+    return bnrImedVal.to_string();
 }
 
 /**
@@ -553,12 +553,14 @@ std::string parseLOADI(std::string asmCodeLine){
 
     //Gets the immediate value and converts it to binary
     std::string imedValStr = readWord(asmCodeLine,cursor);
+    std::cout << asmCodeLine << "\n";
+    std::cout << imedValStr <<"\n";
     int imedValInt = stoi(imedValStr);
-    std::bitset<8> imedValBnr;
-    imedValBnr = imedValInt;
+   
+    std::string imedValue = parseConstantImedValue(imedValInt);
 
     //Adds the immediate value to the rest of the code
-    generatedMachineCode += imedValBnr.to_string();
+    generatedMachineCode += imedValue;
 
     free(cursor);
     return generatedMachineCode;
@@ -657,11 +659,10 @@ std::string parseADDIxSUBI(std::string asmCodeLine){
      //Gets the immediate value and converts it to binary
     std::string imedValStr = readWord(asmCodeLine,2);
     int imedValInt = stoi(imedValStr);
-    std::bitset<8> imedValBnr;
-    imedValBnr = imedValInt;
+    std::string imedVal =  parseConstantImedValue(imedValInt);
 
     //Adds the immediate value to the rest of the code
-    generatedMachineCode += imedValBnr.to_string();
+    generatedMachineCode += imedVal;
 
     return generatedMachineCode;
 
@@ -733,7 +734,7 @@ std::string parseLOAD(std::string asmCodeLine, std::string opCode){
     return generatedMachineCode;
 }
 /**
- * @brief Parses a line of code with the OpCodes LOAD, LOADF
+ * @brief Parses a line of code with the OpCodes STORE
  * 
  * @param codeLine The line of code to parse
  * @param opCode This line of codes opCode
@@ -993,32 +994,30 @@ void convertAsmCode(){
  */
 std::vector<usrVarOutput> formatVariablesOutput(){
     std::vector<usrVarOutput> outputVars;
+    std::vector<std::string> varNamesOutput;
 
-    //Get a list of the keys (variable names)
-    std::vector<std::string> keys;
-    for (auto it = usrVarMap.begin(); it != usrVarMap.end(); it++) {
-        keys.push_back(it->first);
-    }
-
-    //Does additonal formatting on any declared arrays 
-    int prevBracket = keys[0].find('[');
-    for(int i =1; i <keys.size(); i++){
-        int currBracket = keys[i].find('[');
+    //Does additonal formatting on any declared arrays and adds all variables to a new list
+    int prevBracket = varNames[0].find('[');
+    for(int i =1; i <varNames.size(); i++){
+        int currBracket = varNames[i].find('[');
 
         if(prevBracket == std::string::npos && currBracket != std::string::npos){
-            keys[i-1] = keys[i-1] + "[0]";
+            varNamesOutput.push_back(varNames[i-1] + "[0]");
+        }
+        else{
+            varNamesOutput.push_back(varNames[i-1]);
         }
 
         prevBracket = currBracket;
     }
+    varNamesOutput.push_back(varNames[varNames.size() -1 ]);
 
     //Stores the name and value into structs and then returns them as a list
-    for(int i =0; i <keys.size(); i++){
+    for(int i =0; i <varNames.size(); i++){
         usrVarOutput temp;
-        temp.name = keys[i];
-        temp.val = usrVarMap[keys[i]].val;
-        varVals.push_back(usrVarMap[keys[i]].val);
-
+        temp.name = varNamesOutput[i];
+        temp.val = usrVarMap[varNames[i]].val;
+        varVals.push_back(usrVarMap[varNames[i]].val);
         outputVars.push_back(temp);
     }
     return outputVars;
@@ -1060,8 +1059,8 @@ void outputCode(){
     std::vector<branchLocOutput> outputBranches = formatBranchLocsOutput();
 
     //Writes the users code to verilog files
-    outputUserCode(instructionList,0,userFilePath,programName);
-    outputUserCode(instructionList,16,userFilePath,programName);
+    outputUserCode(instructionList,0,userFilePath,"User_Code_Low");
+    outputUserCode(instructionList,16,userFilePath,"User_Code_High");
 
     //Writes the users data to a verilog files
     outputUserData(outputVars,userFilePath);
@@ -1077,10 +1076,12 @@ void outputCode(){
  * @return The users inputed file path 
  */
 std::string getUserFile(){
+    //Asks the user for input and saves it to a variable
     std::cout << "Enter the file containing code to assemble: \n";
     std::string usrInput;
     std::cin >> usrInput;
 
+    //Gets the location within the input of different parts of the filepath
     int nameStartLocation = -1;
     int extensionLocation = -1;
     for(int i = usrInput.length(); i >= 0; i -= 1){
@@ -1095,13 +1096,16 @@ std::string getUserFile(){
         }
     }
 
+    //Sets variables for the file path and name
     programName = usrInput.substr(nameStartLocation,extensionLocation-nameStartLocation);
     userFilePath = usrInput.substr(0,usrInput.length() - nameStartLocation); 
+
+    return usrInput;
 
 }
 
 int main(){
-    rawCode = readFromFile("TestProgram.txt");
+    rawCode = readFromFile("AsmPrograms/SelectionSort/SelectionSort.asm");
     asmCode = parseCode(rawCode);
     readDataSec();
     setJumpAddreses();
@@ -1111,5 +1115,4 @@ int main(){
     outputCode();
 
     std::cout << machineCodeProgram;
-
 }

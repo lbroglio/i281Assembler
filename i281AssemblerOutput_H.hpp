@@ -51,26 +51,27 @@ void declareVerilogOutputs(int numOutputs,int outputBusSize, std::ofstream* outp
  */
 void outputUserCode(std::vector<std::string> instructionList, int startLoc,std::string filePath,std::string moduleName){
     std::ofstream codeFile;
-    codeFile.open(filePath + "/" + moduleName + ".v");
+    codeFile.open(filePath + moduleName + ".v");
 
     //Write the first line to the file
     codeFile << "module " << moduleName << "(b0I,b1I,b2I,b3I,b4I,b5I,b6I,b7I,b8I,b9I,b10I,b11I,b12I,b13I,b14I,b15I);\n\n";
     
     //Declare the outputs
     declareVerilogOutputs(16,16,&codeFile);
+    std::cout << '\n';
     
     //Write the assign statements until all the instructions are used or the length is 16
-    int i = startLoc;
-    while(i < instructionList.size() && i < 16){
-        codeFile << "assign b" << i << "I[15:0] = 16\'b" << instructionList[startLoc + i] <<";\n";
+    int i = 0;
+    int lineCounter = 0;
+    while(i + startLoc < instructionList.size()){
+        codeFile << "assign b" << lineCounter << "I[15:0] = 16\'b" << instructionList[startLoc + i] <<";\n";
         i++;
     }
     //Adds empty instructions if less than 16 
     while(i < 16){
-        codeFile << "assign b" << i << "I[15:0] = 16\'b" <<"0000_00_00_00000000" <<";\n";
-        i++;
-        
-    }
+        codeFile << "assign b" << lineCounter << "I[15:0] = 16\'b" <<"0000_00_00_00000000" <<";\n";
+        i++; 
+    }  
 
     codeFile << "endmodule";
     codeFile.close();
@@ -84,7 +85,7 @@ void outputUserCode(std::vector<std::string> instructionList, int startLoc,std::
  */
 void outputUserData(std::vector<usrVarOutput> usrVars,std::string filePath){
     std::ofstream dataFile;
-    dataFile.open(filePath + "/" + "User_Data.v");
+    dataFile.open(filePath + "User_Data.v");
 
     
     //Write the first line to the file
@@ -92,16 +93,18 @@ void outputUserData(std::vector<usrVarOutput> usrVars,std::string filePath){
     
     //Declare the outputs
     declareVerilogOutputs(16,7,&dataFile);
-    
+    std::cout << '\n';
+
     //Write the assign statements until all the instructions are used or the length is 16
     int i = 0;
+    int lineCounter = 0;
     while(i < usrVars.size()){
         dataFile << "assign b" << i << "I[7:0] = 8\'b" << usrVars[i].val << "; //" << usrVars[i].name << "\n";
         i++;
     }
     //Adds empty instructions if less than 16 
     while(i < 16){
-        dataFile << "assign b" << i << "I[15:0] = 16\'b" <<"00000000" <<";\n";
+        dataFile << "assign b" << i << "I[7:0] = 8\'b" <<"00000000" <<";\n";
         i++;
         
     }
@@ -126,7 +129,7 @@ void outputBinFile(std::string rawCode,std::string machineCode,std::string progr
     binFile << rawCode;
 
     //Writes the machine code to file
-    binFile << "\n-----MACHINE CODE-----\n" << machineCode;
+    binFile << "\n\n-----MACHINE CODE-----\n" << machineCode;
 
     //Writes the data segment values to the file
     binFile << "\n-----DATA SEGMENT-----\n[";
@@ -148,7 +151,7 @@ void outputBinFile(std::string rawCode,std::string machineCode,std::string progr
     }
 
     for(int i=1; i < branchLocs.size(); i++){
-        binFile << branchLocs[i].name << "=" << branchLocs[i].loc;
+        binFile << ", "<< branchLocs[i].name << "=" << branchLocs[i].loc;
     }
     binFile << "}\n";
 
