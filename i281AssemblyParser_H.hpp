@@ -195,7 +195,7 @@ std::string removeWhiteSpaceAndComments(std::string asmCode){
        
 
         //Checks if the line is a blank line
-       if(currentLine == "\n"){
+       if(currentLine[0] == '\n' || currentLine.length() < 2){
         continue;
        }
        //Checks if the line is entirely a comment

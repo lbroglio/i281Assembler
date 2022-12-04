@@ -908,11 +908,12 @@ void convertAsmCode(){
 
          //Makes sure the program isn't to long
         if(codeSecLineNum > 32){
-            throwAssemblerError("The providec code is to long. The maximum length is 32 instructions.");
+            throwAssemblerError("The provided code is to long. The maximum length is 32 instructions.");
         }
     
         //Gets the current line of code 
         std::string currLine = readLine(asmCode.codeSec,cursor,1);
+        
 
         //Gets a cursor to read through the line
         int* lineCursor = (int*) malloc(sizeof cursor);
@@ -921,14 +922,13 @@ void convertAsmCode(){
         //Reads the OpCpde of the current line
         std::string opCode = readWord(currLine,lineCursor);
         *lineCursor +=1;
-
+        
         if(opCodeMap.count(opCode) == 0){
             throwAssemblerError("The provided OpCpde " + opCode + " is not valid");
         }
 
         //Gets the current  line without the OpCpde to be sent to the parsing functions
         std::string lineToParse = currLine.substr(*lineCursor);
-       
         //Creates the line of machine code and adds the OpCpde's binary identifier to it
         std::string machineCodeLine = opCodeMap.at(opCode);
 
@@ -960,7 +960,7 @@ void convertAsmCode(){
         else if(opCode == "STORE" || opCode == "STOREF"){
             machineCodeLine += parseSTORE(lineToParse,opCode);
         }
-        else if(opCode == "SHIFT"){
+        else if(opCode == "SHIFTL" || opCode == "SHIFTR"){
             machineCodeLine += parseSHIFT(lineToParse,opCode);
         }
         else if(opCode == "JUMP"){
@@ -1081,35 +1081,45 @@ std::string getUserFile(){
 
     //Gets the location within the input of different parts of the filepath
     int nameStartLocation = -1;
-    int extensionLocation = -1;
-    for(int i = usrInput.length(); i >= 0; i -= 1){
+    int extensionLocation = usrInput.length();
+    for(int i = usrInput.length() -1 ; i >= 0; i -= 1){
         char curChar = usrInput[i];
 
-        if(curChar == '.' && extensionLocation == -1){
-            extensionLocation == i;
+        if(curChar == '.' && extensionLocation == usrInput.length()){
+            extensionLocation = i;
         }
 
-        if(curChar == '/' && extensionLocation == -1 || curChar == '\\' && extensionLocation == -1){
-            nameStartLocation == i +1;
+        if(curChar == '/' && nameStartLocation == -1 || curChar == '\\' && nameStartLocation == -1){
+            nameStartLocation = i +1;
         }
     }
 
     //Sets variables for the file path and name
     programName = usrInput.substr(nameStartLocation,extensionLocation-nameStartLocation);
-    userFilePath = usrInput.substr(0,usrInput.length() - nameStartLocation); 
+    userFilePath = usrInput.substr(0,nameStartLocation); 
 
     return usrInput;
 
 }
 
 int main(){
-    rawCode = readFromFile("AsmPrograms/SelectionSort/SelectionSort.asm");
+    //Takes in a file from the user and parses the code inside it
+    std::string asmCodeFile =  getUserFile();
+    rawCode = readFromFile(asmCodeFile);
     asmCode = parseCode(rawCode);
+    
+    //Reads the data section and handles variable declaration
     readDataSec();
+
+
+    //Handles Jump Addresses
     setJumpAddreses();
+
+    //Convets the .code section into machine code
     convertAsmCode();
-    userFilePath = "";
-    programName = "TestProgram";
+    
+
+    //Outputs the assembled code
     outputCode();
 
 }
