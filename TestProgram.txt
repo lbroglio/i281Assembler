@@ -1,8 +1,0 @@
-.data
-a BYTE -5
-b BYTE 10
-c BYTE  ?
-
-.code
-LOADI A,-3
-ADDI, A,-2

@@ -912,7 +912,7 @@ void convertAsmCode(){
         }
     
         //Gets the current line of code 
-        std::string currLine = readLine(asmCode.codeSec,cursor,1);
+        std::string currLine = readLine(asmCode.codeSec,cursor);
         
 
         //Gets a cursor to read through the line
@@ -1107,10 +1107,10 @@ int main(){
     std::string asmCodeFile =  getUserFile();
     rawCode = readFromFile(asmCodeFile);
     asmCode = parseCode(rawCode);
-    
+
     //Reads the data section and handles variable declaration
     readDataSec();
-
+    
 
     //Handles Jump Addresses
     setJumpAddreses();
