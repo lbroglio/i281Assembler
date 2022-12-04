@@ -62,14 +62,13 @@ void outputUserCode(std::vector<std::string> instructionList, int startLoc,std::
     
     //Write the assign statements until all the instructions are used or the length is 16
     int i = 0;
-    int lineCounter = 0;
     while(i + startLoc < instructionList.size()){
-        codeFile << "assign b" << lineCounter << "I[15:0] = 16\'b" << instructionList[startLoc + i] <<";\n";
+        codeFile << "assign b" << i << "I[15:0] = 16\'b" << instructionList[startLoc + i] <<";\n";
         i++;
     }
     //Adds empty instructions if less than 16 
     while(i < 16){
-        codeFile << "assign b" << lineCounter << "I[15:0] = 16\'b" <<"0000_00_00_00000000" <<";\n";
+        codeFile << "assign b" << i << "I[15:0] = 16\'b" <<"0000_00_00_00000000" <<";\n";
         i++; 
     }  
 
