@@ -382,6 +382,8 @@ std::string formatMachineCodeLine(std::string toFormat){
 /**
  * @brief Gets the imdevalue bits needed for a code line with the given jump address as a 2s complement binary number
  * 
+ * Note the +1 offset is handled implcitly in the line numbering of the addresses
+ * 
  * @param jumpAddress - The name of the address to jump to
  * @return The 2s complement binary number to use as the imedvalue stored as a string
  */
@@ -712,7 +714,10 @@ std::string parseLOAD(std::string asmCodeLine, std::string opCode){
     int referencedMemLoc = readVarReference(bracketContents);
     
     //Checks if the given location is out of bounds
-     checkOutOfBoundsDataMem(referencedMemLoc);
+    if(opCode == "LOAD"){
+        checkOutOfBoundsDataMem(referencedMemLoc);
+    }
+    
     
     //Warns the user that if the offset could go outside the data memory
     if(opCode == "LOADF"){
