@@ -24,3 +24,11 @@ The program turns the given assembly code into a format that the simulated CPU c
     - The fourth and final section contains a list of all the possible addresses the program could jump to with their assigned line numbers.
   - The fifth and final output of the program is simply the contents of the .bin file also being output to the console.
 
+
+### Notes 
+  - The AsmPrograms folder has i281 Assembly programs which can be used to test the assembler
+  
+### Credit To 
+   - Kyung-Tae J. Kim and Alexander Stoytchev for the design of the i281 CPU
+   - Alexander Stoytchev for the creation of the i281 Assembly Langugage
+   - Alexander Stoytchev for writing the including 1281 Assembly programs 
