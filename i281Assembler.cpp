@@ -4,8 +4,8 @@
 #include <unordered_map>
 #include <bitset>
 #include <vector>
-#include "i281AssemblyParser_H.hpp"
-#include "i281AssemblerOutput_H.hpp"
+#include "i281AssemblyParser.hpp"
+#include "i281AssemblerOutput.hpp"
 
 
 /**
@@ -87,7 +87,6 @@ std::string userFilePath;
 /**
  * @brief Prints to the console that an error occured with a given message. Ends the program
  * 
- * @param lineNum The line number that error happened at
  * @param errorMessage What to print to the console along with the error
  */
 void throwAssemblerError(std::string  errorMessage){
