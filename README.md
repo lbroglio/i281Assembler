@@ -4,7 +4,7 @@ The program turns the given assembly code into a format that the simulated CPU c
 
 ### How to use the assembler
 1. If the C++  program isn’t already compiled, compile it. This can be done with any C++ compiler. If you choose to use g++, the program can be compiled by opening a terminal,  navigating to the directory in which the i281Assembler.cpp program is stored, and entering the command:  
-  g++ -o i281Assembler i281Assembler.cpp i281AssemblerOutput.cpp i281AssemblyParser.cp 
+  g++ -o i281Assembler i281Assembler.cpp i281AssemblerOutput.cpp i281AssemblyParser.cpp 
 2. Once the program is compiled, run it from the command line with the command ./i281Assembler (Or whatever name you gave the .exe file)
 3. At this point, the program will run and prompt you to enter a file path.  Enter the path to the file you wish to compile here.
 4. After this, the program should output the compiled code.
