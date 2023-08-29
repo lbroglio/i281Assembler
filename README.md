@@ -32,4 +32,4 @@ The program turns the given assembly code into a format that the simulated CPU c
 ### Credit To 
    - Kyung-Tae J. Kim and Alexander Stoytchev for the design of the i281 CPU
    - Alexander Stoytchev for the creation of the i281 Assembly Langugage
-   - Alexander Stoytchev for writing the included 1281 Assembly programs 
+   - Alexander Stoytchev for writing the included i281 Assembly programs 
